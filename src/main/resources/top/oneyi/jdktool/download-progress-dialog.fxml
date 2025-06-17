@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.layout.VBox?>
+
+
+<VBox spacing="15" xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml" fx:controller="top.oneyi.jdktool.controller.DownloadProgressDialogController">
+    <Label fx:id="sizeLabel"  style="-fx-font-size: 16px; -fx-text-fill: #333;"/>
+    <Label fx:id="statusLabel" text="jdk下载中" style="-fx-font-size: 16px; -fx-text-fill: #333;"/>
+
+    <ProgressBar fx:id="progressBar" style="-fx-accent: #4caf50;"
+                 minWidth="400"
+                 minHeight="20"/>
+</VBox>

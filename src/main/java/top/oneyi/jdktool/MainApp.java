@@ -7,12 +7,15 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.Objects;
 
 public class MainApp extends Application {
     @Override
     public void start(Stage stage) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(MainApp.class.getResource("jdk-installer.fxml"));
+
+        URL resource = MainApp.class.getResource("jdk-installer.fxml");
+        FXMLLoader fxmlLoader = new FXMLLoader(resource);
         Scene scene = new Scene(fxmlLoader.load(), 640, 480);
         String iconPath = getClass().getResource("/icons/env-launcher.png").toExternalForm();
         stage.getIcons().add(new Image(iconPath));

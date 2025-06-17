@@ -35,5 +35,6 @@
     </HBox>
 
     <!-- 输出日志区域 -->
-    <TextArea fx:id="outputArea" editable="false" wrapText="true" prefHeight="350" styleClass="text-area" promptText="日志输出区"/>
+    <TextArea fx:id="outputArea" editable="false" wrapText="true" prefHeight="350" styleClass="text-area"
+              promptText="日志输出区"/>
 </VBox>
