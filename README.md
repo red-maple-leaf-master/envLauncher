@@ -1,5 +1,12 @@
 # env-launcher
 
+## 技术列表
+* javafx
+* maven
+* jdk17
+
+使用jpackage打包,将jre运行环境也都打包到 exe 中,方便没有安装 Java环境的电脑运行
+
 ## 如何打包
 在idea的 maven 插件框中找到javafx:jink进行打包 
 然后通过run.bat进行打包成exe 或者在当前项目根目录的cmd窗口中 运行
