@@ -22,14 +22,34 @@ import java.net.URL;
  */
 public class JdkInstallerService {
 
+    private Stage dialogStage;
+
 
     /**
-     * 设置Maven
+     * 下载指定版本的 Maven 并解压
      *
-     * @param outputArea 输出区域
+     * @param outputArea 输出日志区域
+     * @param version    Maven 版本（如 "3.8.8"）
+     * @param callback   下载完成回调
      */
-    public void onSetupMaven(TextArea outputArea) {
-        outputArea.appendText("⚠ 暂不支持 Maven 设置功能\n");
+    public void onSetupMaven(TextArea outputArea, String version, JdkDownloadCallback callback) {
+        String baseUrl = "https://archive.apache.org/dist/maven/maven-3/";
+        String mavenUrl = baseUrl + version + "/binaries/apache-maven-" + version + "-bin.zip";
+        String destinationPath = PathUtils.getMavenDownloadPath(version);
+
+        outputArea.appendText("📥 开始从官方地址下载 Maven: " + version + "\n");
+        // 创建下载进度对话框
+        DownloadProgressDialogController controller = createDialog("Maven 下载进度");
+
+        Task<Void> downloadTask = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                downloadFileWithProgress(mavenUrl, destinationPath, outputArea, controller, dialogStage, callback);
+                return null;
+            }
+        };
+
+        new Thread(downloadTask).start();
     }
 
 
@@ -44,24 +64,10 @@ public class JdkInstallerService {
         String baseUrl = "https://mirrors.tuna.tsinghua.edu.cn/Adoptium/";
         String jdkDownloadUrl = baseUrl + JDKVersionConfig.getUrl(version);
         String destinationPath = PathUtils.getDownloadPath(version);
+
         outputArea.appendText("📥 开始从清华大学镜像下载 JDK: " + version + "\n");
-
-        Stage dialogStage = new Stage();
-        dialogStage.initModality(Modality.APPLICATION_MODAL);
-        dialogStage.setTitle("下载进度");
-
-        URL fxmlUrl = MainApp.class.getResource("download-progress-dialog.fxml");
-        FXMLLoader loader = new FXMLLoader(fxmlUrl);
-        try {
-            Scene scene = new Scene(loader.load(), 450, 180);
-            dialogStage.setScene(scene);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        DownloadProgressDialogController controller = loader.getController();
-        dialogStage.show();
+        // 创建下载进度对话框
+        DownloadProgressDialogController controller = createDialog("JDK 下载进度");
 
         Task<Void> downloadTask = new Task<>() {
             @Override
@@ -274,6 +280,32 @@ public class JdkInstallerService {
         e.printStackTrace();
 
         Platform.runLater(dialogStage::close);
+    }
+
+
+    /**
+     * 创建下载进度对话框的 Controller
+     * @param title 对话框的标题
+     * @return 对话框的 Controller
+     */
+    private DownloadProgressDialogController createDialog(String  title) {
+        dialogStage = new Stage();
+        dialogStage.initModality(Modality.APPLICATION_MODAL);
+        dialogStage.setTitle(title);
+        URL fxmlUrl = MainApp.class.getResource("download-progress-dialog.fxml");
+        FXMLLoader loader = new FXMLLoader(fxmlUrl);
+
+        try {
+            Scene scene = new Scene(loader.load(), 450, 180);
+            dialogStage.setScene(scene);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        DownloadProgressDialogController controller = loader.getController();
+        dialogStage.show();
+        return controller;
     }
 
 

@@ -26,17 +26,20 @@
         <TextField fx:id="jdkPathField" editable="false" prefWidth="400" prefHeight="35" styleClass="text-field"/>
         <Button text="📁 选择 JDK 目录" onAction="#onChooseJdkDir" prefHeight="35" styleClass="button"/>
     </HBox>
-    <!--  JDK下载  -->
+
     <HBox spacing="10">
+        <!--  JDK下载  -->
         <ComboBox fx:id="jdkVersionCombo" prefWidth="80" prefHeight="15" styleClass="text-field"/>
         <Button text="📥 下载 JDK" onAction="#onDownloadJdk" prefHeight="35" styleClass="button"/>
+        <!--  maven 下载  -->
+        <ComboBox fx:id="mavenVersionCombo" prefWidth="180" prefHeight="15" styleClass="text-field"/>
+        <Button text="🔧 一键设置 Maven" onAction="#onSetupMaven" prefHeight="35" styleClass="button"/>
     </HBox>
 
     <!-- 操作按钮 -->
     <HBox spacing="10">
         <Button text="⚙ 设置环境变量" onAction="#onSetEnvironmentVariables" prefHeight="35" styleClass="button"/>
         <Button text="🔍 查看当前配置" onAction="#onShowCurrentConfig" prefHeight="35" styleClass="button"/>
-        <Button text="🔧 一键设置 Maven" onAction="#onSetupMaven" prefHeight="35" styleClass="button"/>
     </HBox>
 
     <!-- 输出日志区域 -->

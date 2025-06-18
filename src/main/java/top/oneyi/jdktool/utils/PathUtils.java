@@ -118,4 +118,16 @@ public class PathUtils {
         }
     }
 
+    public static String getMavenDownloadPath(String version) {
+        File downloadDir = new File(getCurrentDrive() + "environment");
+
+        if (!downloadDir.exists()) {
+            downloadDir.mkdirs();
+        }
+
+        return new File(downloadDir, "apache-maven-" + version + ".zip").getAbsolutePath();
+    }
+
+
+
 }
