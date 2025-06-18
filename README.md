@@ -20,4 +20,4 @@ jpackage --name envLauncher --type app-image -m top.oneyi.jdktool/top.oneyi.jdkt
 --runtime-image 运行时环境
 ```
 **注意**
-> 需要将电脑的环境切换成jdk17 不然打包会报错 切换jdk的时候切记要重启idea 
+> 需要将电脑的环境切换成jdk17 不然打包会报错 切换jdk的时候切记要重启idea

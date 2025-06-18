@@ -2,10 +2,8 @@ package top.oneyi.jdktool.service;
 
 import javafx.application.Platform;
 import javafx.concurrent.Task;
-import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextArea;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -13,16 +11,9 @@ import top.oneyi.jdktool.MainApp;
 import top.oneyi.jdktool.callback.JdkDownloadCallback;
 import top.oneyi.jdktool.config.JDKVersionConfig;
 import top.oneyi.jdktool.controller.DownloadProgressDialogController;
-import top.oneyi.jdktool.model.DownloadProgressDialog;
 import top.oneyi.jdktool.utils.PathUtils;
-
 import java.io.*;
-import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 /**
  * @author W
