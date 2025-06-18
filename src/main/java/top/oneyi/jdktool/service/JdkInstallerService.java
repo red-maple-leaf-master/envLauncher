@@ -32,10 +32,23 @@ import java.util.zip.ZipInputStream;
 public class JdkInstallerService {
 
 
+    /**
+     * 设置Maven
+     *
+     * @param outputArea 输出区域
+     */
     public void onSetupMaven(TextArea outputArea) {
         outputArea.appendText("⚠ 暂不支持 Maven 设置功能\n");
     }
 
+
+    /**
+     * 下载JDK
+     *
+     * @param outputArea 输出区域
+     * @param version    JDK版本
+     * @param callback   回调
+     */
     public void onDownloadJdk(TextArea outputArea, String version, JdkDownloadCallback callback) {
         String baseUrl = "https://mirrors.tuna.tsinghua.edu.cn/Adoptium/";
         String jdkDownloadUrl = baseUrl + JDKVersionConfig.getUrl(version);
@@ -70,124 +83,169 @@ public class JdkInstallerService {
         new Thread(downloadTask).start();
     }
 
-
-    private void downloadFileWithProgress(String url, String destinationPath, TextArea outputArea,
-                                          DownloadProgressDialogController controller, Stage dialogStage,
+    /**
+     * 下载文件并显示进度
+     *
+     * @param url             下载链接
+     * @param destinationPath 保存路径
+     * @param outputArea      输出文本框
+     * @param controller      进度条控制器
+     * @param dialogStage     弹窗
+     * @param callback        下载完成回调
+     */
+    private void downloadFileWithProgress(String url,
+                                          String destinationPath,
+                                          TextArea outputArea,
+                                          DownloadProgressDialogController controller,
+                                          Stage dialogStage,
                                           JdkDownloadCallback callback) {
         try {
-            long contentLength = getFileSize(url);
+            // 1️⃣ 获取文件大小并更新 UI
+            long contentLength = PathUtils.getFileSize(url);
+            updateFileSizeLabel(controller, contentLength);
 
-            if (contentLength <= 0) {
-                Platform.runLater(() -> controller.statusLabel.setText("⚠ 无法获取文件大小"));
-            } else {
-                Platform.runLater(() -> controller.sizeLabel.setText("文件大小: " + contentLength / (1024 * 1024) + " MB"));
+            // 2️⃣ 开始下载
+            boolean downloadSuccess = downloadToFile(url, destinationPath, contentLength, controller, outputArea);
+            if (!downloadSuccess) {
+                return;
             }
 
-            BufferedInputStream in = new BufferedInputStream(new URL(url).openStream());
-            FileOutputStream fileOutputStream = new FileOutputStream(destinationPath);
-
-            byte[] dataBuffer = new byte[1024];
-            int bytesRead;
-            long totalBytesRead = 0;
-
-            Platform.runLater(() -> controller.statusLabel.setText("开始下载..."));
-
-            while ((bytesRead = in.read(dataBuffer)) != -1) {
-                fileOutputStream.write(dataBuffer, 0, bytesRead);
-                totalBytesRead += bytesRead;
-
-                final double progress = (double) totalBytesRead / contentLength;
-                final String status = String.format("已下载 %.2f MB / %.2f MB",
-                        totalBytesRead / (1024.0 * 1024.0), contentLength / (1024.0 * 1024.0));
-
-                Platform.runLater(() -> {
-                    controller.progressBar.setProgress(progress);
-                    controller.statusLabel.setText(status);
-                });
+            // 3️⃣ 解压 ZIP 文件
+            String extractedDir = destinationPath.replace(".zip", "");
+            boolean unzipSuccess = unzipAndNotify(destinationPath, extractedDir, controller, outputArea);
+            if (!unzipSuccess) {
+                return;
             }
 
-            fileOutputStream.close();
+            // 4️⃣ 回调通知
+            if (callback != null) {
+                callback.onDownloadComplete(extractedDir);
+            }
+
+            // 5️⃣ 关闭弹窗
+            Platform.runLater(dialogStage::close);
+
+        } catch (Exception e) {
+            handleDownloadError(e, controller, outputArea, dialogStage);
+        }
+    }
+
+    /**
+     * 📦 更新文件大小提示
+     *
+     * @param controller    弹窗控制器
+     * @param contentLength 文件大小
+     */
+    private void updateFileSizeLabel(DownloadProgressDialogController controller, long contentLength) {
+        if (contentLength <= 0) {
+            Platform.runLater(() -> controller.sizeLabel.setText("⚠ 无法获取文件大小"));
+        } else {
+            String sizeText = String.format("文件大小: %.2f MB", contentLength / (1024.0 * 1024.0));
+            Platform.runLater(() -> controller.sizeLabel.setText(sizeText));
+        }
+    }
+
+    /**
+     * 📥 执行下载逻辑
+     *
+     * @param url             下载链接
+     * @param destinationPath 下载路径
+     * @param contentLength   文件大小
+     * @param controller      弹窗控制器
+     * @param outputArea      输出文本框
+     * @return 下载成功返回 true，否则返回 false
+     * @throws IOException
+     */
+    private boolean downloadToFile(String url, String destinationPath, long contentLength,
+                                   DownloadProgressDialogController controller, TextArea outputArea) throws IOException {
+        BufferedInputStream in = new BufferedInputStream(new URL(url).openStream());
+        FileOutputStream fileOutputStream = new FileOutputStream(destinationPath);
+
+        byte[] dataBuffer = new byte[1024];
+        int bytesRead;
+        long totalBytesRead = 0;
+
+        Platform.runLater(() -> controller.statusLabel.setText("开始下载..."));
+
+        while ((bytesRead = in.read(dataBuffer)) != -1) {
+            fileOutputStream.write(dataBuffer, 0, bytesRead);
+            totalBytesRead += bytesRead;
+
+            final double progress = (double) totalBytesRead / contentLength;
+            final String status = String.format("已下载 %.2f MB / %.2f MB",
+                    totalBytesRead / (1024.0 * 1024.0), contentLength / (1024.0 * 1024.0));
 
             Platform.runLater(() -> {
-                controller.progressBar.setProgress(1.0);
-                controller.statusLabel.setText("✅ 文件下载完成");
-                outputArea.appendText("✅ 文件下载完成: " + destinationPath + "\n");
+                controller.progressBar.setProgress(progress);
+                controller.statusLabel.setText(status);
             });
+        }
 
-            // ✅ 开始解压
+        fileOutputStream.close();
+        Platform.runLater(() -> {
+            controller.progressBar.setProgress(1.0);
+            controller.statusLabel.setText("✅ 文件下载完成");
+            outputArea.appendText("✅ 文件下载完成: " + destinationPath + "\n");
+        });
+
+        return true;
+    }
+
+    /**
+     * 📦 解压 ZIP 文件
+     *
+     * @param zipPath    ZIP 文件路径
+     * @param extractDir 提取目录
+     * @param controller 控制器
+     * @param outputArea 输出区域
+     * @return 是否成功
+     */
+    private boolean unzipAndNotify(String zipPath, String extractDir,
+                                   DownloadProgressDialogController controller,
+                                   TextArea outputArea) {
+        try {
             Platform.runLater(() -> controller.statusLabel.setText("📦 开始解压文件..."));
 
-            String extractedDir = destinationPath.replace(".zip", "");
-
-            unzipFile(destinationPath, extractedDir);
+            PathUtils.unzipFile(zipPath, extractDir);
 
             Platform.runLater(() -> {
                 controller.statusLabel.setText("✅ 解压完成");
-                outputArea.appendText("✅ 文件已解压至: " + extractedDir + "\n");
-
-                // 可选：回调通知控制器更新输入框
-                if (callback != null) {
-                    callback.onDownloadComplete(extractedDir);
-                }
+                outputArea.appendText("✅ 文件已解压至: " + extractDir + "\n");
             });
 
-
-            Platform.runLater(dialogStage::close);
-
+            return true;
         } catch (IOException e) {
             Platform.runLater(() -> {
-                controller.progressBar.setProgress(0);
-                controller.statusLabel.setText("❌ 下载失败: " + e.getMessage());
-                outputArea.appendText("❌ 下载失败: " + e.getMessage() + "\n");
+                controller.statusLabel.setText("❌ 解压失败: " + e.getMessage());
+                outputArea.appendText("❌ 解压失败: " + e.getMessage() + "\n");
             });
-
             e.printStackTrace();
-            Platform.runLater(dialogStage::close);
+            return false;
         }
     }
 
-    private long getFileSize(String url) throws IOException {
-        HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
-        connection.setRequestMethod("HEAD");
-        long contentLength = connection.getContentLengthLong();
-        connection.disconnect();
-        return contentLength;
+    /**
+     * ❌ 统一错误处理
+     *
+     * @param e           错误
+     * @param controller  弹窗控制器
+     * @param outputArea  输出文本框
+     * @param dialogStage 弹窗窗口
+     */
+    private void handleDownloadError(Exception e,
+                                     DownloadProgressDialogController controller,
+                                     TextArea outputArea,
+                                     Stage dialogStage) {
+        Platform.runLater(() -> {
+            controller.progressBar.setProgress(0);
+            controller.statusLabel.setText("❌ 下载失败: " + e.getMessage());
+            outputArea.appendText("❌ 下载失败: " + e.getMessage() + "\n");
+        });
+
+        e.printStackTrace();
+
+        Platform.runLater(dialogStage::close);
     }
 
-    private void unzipFile(String zipFilePath, String destDirectory) throws IOException {
-        File destDir = new File(destDirectory);
-        if (!destDir.exists()) {
-            destDir.mkdirs();
-        }
-
-        try (ZipInputStream zipIn = new ZipInputStream(new FileInputStream(zipFilePath))) {
-            ZipEntry entry = zipIn.getNextEntry();
-            // 缓存大小
-            byte[] buffer = new byte[1024];
-            int len;
-
-            while (entry != null) {
-                String filePath = destDirectory + File.separator + entry.getName();
-                File newFile = new File(filePath);
-
-                // 创建父目录
-                if (entry.isDirectory()) {
-                    newFile.mkdirs();
-                } else {
-                    // 确保父目录存在
-                    new File(newFile.getParent()).mkdirs();
-
-                    // 写入文件
-                    FileOutputStream fos = new FileOutputStream(newFile);
-                    int read;
-                    while ((read = zipIn.read(buffer)) > 0) {
-                        fos.write(buffer, 0, read);
-                    }
-                    fos.close();
-                }
-                entry = zipIn.getNextEntry();
-            }
-        }
-    }
 
 }

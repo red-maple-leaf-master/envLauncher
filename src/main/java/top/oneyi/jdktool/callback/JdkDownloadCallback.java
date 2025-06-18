@@ -1,7 +1,7 @@
 package top.oneyi.jdktool.callback;
 
 /**
- * 回调接口
+ * 下载回调接口
  */
 @FunctionalInterface
 public interface JdkDownloadCallback {

@@ -11,6 +11,7 @@ import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
 import top.oneyi.jdktool.service.JdkInstallerService;
 import top.oneyi.jdktool.utils.JDKUtil;
+import top.oneyi.jdktool.utils.PathUtils;
 
 import java.io.File;
 
@@ -29,6 +30,9 @@ public class JdkInstallerController {
     private ComboBox<String> jdkVersionCombo;
 
 
+    /**
+     * 选择 JDK 安装目录
+     */
     public void onChooseJdkDir() {
         DirectoryChooser chooser = new DirectoryChooser();
         chooser.setTitle("请选择 JDK 安装目录");
@@ -38,6 +42,9 @@ public class JdkInstallerController {
         }
     }
 
+    /**
+     * 设置全局的 Java 环境变量
+     */
     public void onSetEnvironmentVariables() {
 
         String javaHome = jdkPathField.getText();
@@ -58,6 +65,9 @@ public class JdkInstallerController {
         });
     }
 
+    /**
+     * 显示当前 JDK 配置
+     */
     public void onShowCurrentConfig() {
         try {
             String jdkEnv = JDKUtil.getJdkEnvironmentVariables(); // 可以重定向输出到 TextArea
@@ -69,6 +79,9 @@ public class JdkInstallerController {
 
     }
 
+    /**
+     * 初始化 ComboBox 数据
+     */
     @FXML
     private void initialize() {
         // 初始化 ComboBox 数据
@@ -77,6 +90,18 @@ public class JdkInstallerController {
         jdkVersionCombo.getSelectionModel().selectFirst(); // 默认选择第一个项
     }
 
+    /**
+     * 一键设置 Maven
+     */
+    public void onSetupMaven() {
+        JdkInstallerService service = new JdkInstallerService();
+        service.onSetupMaven(outputArea);
+    }
+
+
+    /**
+     * 下载 JDK
+     */
     public void onDownloadJdk() {
         JdkInstallerService service = new JdkInstallerService();
         String selectedVersion = jdkVersionCombo.getValue();
@@ -87,6 +112,8 @@ public class JdkInstallerController {
             outputArea.appendText("❌ 请选择 JDK 版本\n");
         }
     }
+
+
     /**
      * 回调方法：更新 JDK 输入框路径（自动识别解压后的子目录）
      * @param jdkExtractedPath 解压后的根路径（如 D:\environment\jdk-17）
@@ -106,7 +133,7 @@ public class JdkInstallerController {
         }
 
         // ✅ 自动查找包含 bin/java.exe 的子目录（兼容解压后多一层目录的情况）
-        File javaExeFile = findJavaExecutable(extractedRoot);
+        File javaExeFile = PathUtils.findJavaExecutable(extractedRoot);
 
         if (javaExeFile != null) {
             File jdkHome = javaExeFile.getParentFile().getParentFile(); // 定位到 JDK 根目录
@@ -116,33 +143,5 @@ public class JdkInstallerController {
             jdkPathField.setText(extractedRoot.getAbsolutePath());
             outputArea.appendText("⚠️ 未找到 java.exe，已使用默认路径: " + extractedRoot.getAbsolutePath() + "\n");
         }
-    }
-
-    /**
-     * 查找指定目录下的 bin/java.exe（Windows）或 bin/java（Linux/macOS）
-     */
-    private File findJavaExecutable(File rootDir) {
-        File[] files = rootDir.listFiles();
-
-        if (files != null) {
-            for (File file : files) {
-                if (file.isDirectory()) {
-                    File javaExe = new File(file, "bin" + File.separator + "java.exe"); // Windows
-                    if (!javaExe.exists()) {
-                        javaExe = new File(file, "bin" + File.separator + "java"); // Linux/macOS
-                    }
-                    if (javaExe.exists() && javaExe.isFile()) {
-                        return javaExe;
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
-
-    public void onSetupMaven() {
-        JdkInstallerService service = new JdkInstallerService();
-        service.onSetupMaven(outputArea);
     }
 }
