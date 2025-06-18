@@ -45,12 +45,129 @@ public class JdkInstallerService {
             @Override
             protected Void call() throws Exception {
                 downloadFileWithProgress(mavenUrl, destinationPath, outputArea, controller, dialogStage, callback);
+                // 开始设置 maven 配置文件和 maven 仓库
+                String extractedDir = destinationPath.replace(".zip", "");
+                // ✅ 创建 Maven 仓库目录
+                createMavenRepository(extractedDir, outputArea);
+                // ✅ 配置 settings.xml 文件
+                configureMavenSettings(extractedDir, outputArea);
                 return null;
             }
         };
 
         new Thread(downloadTask).start();
     }
+    /**
+     * 查找解压后的 Maven 实际根目录（可能嵌套一层）
+     *
+     * @param extractedDir 解压后的根目录
+     * @return 实际包含 bin/conf 的 Maven 根目录，找不到返回 null
+     */
+    private File findMavenHome(File extractedDir) {
+        // 先检查当前目录是否是有效的 Maven 根目录（含有 conf 和 bin）
+        if (isValidMavenRoot(extractedDir)) {
+            return extractedDir;
+        }
+
+        // 如果不是，则尝试进入下一级目录查找
+        File[] subDirs = extractedDir.listFiles((file) -> file.isDirectory());
+        if (subDirs != null && subDirs.length > 0) {
+            for (File subDir : subDirs) {
+                if (isValidMavenRoot(subDir)) {
+                    return subDir; // 找到嵌套的 Maven 根目录
+                }
+            }
+        }
+
+        return null; // 没有找到有效目录
+    }
+
+    /**
+     * 判断给定目录是否为 Maven 的安装根目录（包含 conf 和 bin 目录）
+     *
+     * @param dir 要检查的目录
+     * @return 是否为有效 Maven 根目录
+     */
+    private boolean isValidMavenRoot(File dir) {
+        File confDir = new File(dir, "conf");
+        File binDir = new File(dir, "bin");
+        return confDir.exists() && binDir.exists();
+    }
+
+    private void createMavenRepository(String mavenHome, TextArea outputArea) {
+        File repoDir = new File(mavenHome, "maven-repository");
+        if (!repoDir.exists()) {
+            boolean success = repoDir.mkdirs();
+            if (success) {
+                Platform.runLater(() -> outputArea.appendText("📁 已创建 Maven 本地仓库目录: " + repoDir.getAbsolutePath() + "\n"));
+            } else {
+                Platform.runLater(() -> outputArea.appendText("❌ 创建 Maven 仓库失败\n"));
+            }
+        } else {
+            Platform.runLater(() -> outputArea.appendText("📁 Maven 仓库已存在: " + repoDir.getAbsolutePath() + "\n"));
+        }
+    }
+    private void configureMavenSettings(String mavenHome, TextArea outputArea) {
+        File settingsFile = new File(mavenHome, "conf" + File.separator + "settings.xml");
+
+        if (!settingsFile.exists()) {
+            Platform.runLater(() -> outputArea.appendText("❌ 找不到 settings.xml 文件\n"));
+            return;
+        }
+
+        try {
+            // 读取文件内容
+            StringBuilder content = new StringBuilder();
+            BufferedReader reader = new BufferedReader(new FileReader(settingsFile));
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append(System.lineSeparator());
+            }
+            reader.close();
+
+            // 设置本地仓库路径
+            String localRepoPath = new File(mavenHome, "maven-repository").getAbsolutePath();
+            String updatedContent = content.toString().replaceAll(
+                    "<localRepository>.*?</localRepository>",
+                    "<localRepository>" + localRepoPath + "</localRepository>"
+            );
+
+            // 如果没有找到 <localRepository> 标签，则插入进去
+            if (!content.toString().contains("<localRepository>")) {
+                updatedContent = content.toString().replaceFirst("</settings>",
+                        "  <localRepository>" + localRepoPath + "</localRepository>\n</settings>");
+            }
+
+            // ✅ 添加阿里云镜像源（如果还没有 mirror 配置）
+            String aliyunMirror = "<mirror>\n" +
+                    "  <id>aliyunmaven</id>\n" +
+                    "  <mirrorOf>*</mirrorOf>\n" +
+                    "  <name>阿里云公共仓库</name>\n" +
+                    "  <url>https://maven.aliyun.com/repository/public</url>\n" +
+                    "</mirror>\n" +
+                    "    ";
+
+            // 检查是否已有 <mirrors> 节点
+            if (updatedContent.contains("<mirrors>")) {
+                updatedContent = updatedContent.replaceFirst("</settings>",
+                        aliyunMirror + "\n</settings>");
+                outputArea.setText("⚠ 已有 <mirrors> 节点，请手动添加阿里云镜像源\n");
+            }
+
+            // 写回文件
+            BufferedWriter writer = new BufferedWriter(new FileWriter(settingsFile));
+            writer.write(updatedContent);
+            writer.close();
+
+            Platform.runLater(() -> outputArea.appendText("✅ 已配置 Maven 本地仓库路径: " + localRepoPath + "\n"));
+
+        } catch (IOException e) {
+            Platform.runLater(() -> outputArea.appendText("❌ 修改 settings.xml 失败: " + e.getMessage() + "\n"));
+            e.printStackTrace();
+        }
+    }
+
 
 
     /**
