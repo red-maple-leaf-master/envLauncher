@@ -106,7 +106,8 @@ public class JdkInstallerService {
 
             // 2️⃣ 开始下载
             boolean downloadSuccess = downloadToFile(url, destinationPath, contentLength, controller, outputArea);
-            if (!downloadSuccess) {
+            if (!downloadSuccess || controller.isCancelRequested()) {
+                Platform.runLater(() -> outputArea.appendText("❌ 下载已取消\n"));
                 return;
             }
 
@@ -117,12 +118,15 @@ public class JdkInstallerService {
                 return;
             }
 
-            // 4️⃣ 回调通知
+            // 4️⃣ 自动删除 ZIP 文件
+            autoDeleteZipFile(destinationPath, outputArea);
+
+            // 5️⃣ 回调通知
             if (callback != null) {
                 callback.onDownloadComplete(extractedDir);
             }
 
-            // 5️⃣ 关闭弹窗
+            // 6️⃣ 关闭弹窗
             Platform.runLater(dialogStage::close);
 
         } catch (Exception e) {
@@ -158,7 +162,8 @@ public class JdkInstallerService {
      */
     private boolean downloadToFile(String url, String destinationPath, long contentLength,
                                    DownloadProgressDialogController controller, TextArea outputArea) throws IOException {
-        BufferedInputStream in = new BufferedInputStream(new URL(url).openStream());
+        URL downloadUrl = new URL(url);
+        InputStream inputStream = new BufferedInputStream(downloadUrl.openStream());
         FileOutputStream fileOutputStream = new FileOutputStream(destinationPath);
 
         byte[] dataBuffer = new byte[1024];
@@ -167,28 +172,44 @@ public class JdkInstallerService {
 
         Platform.runLater(() -> controller.statusLabel.setText("开始下载..."));
 
-        while ((bytesRead = in.read(dataBuffer)) != -1) {
-            fileOutputStream.write(dataBuffer, 0, bytesRead);
-            totalBytesRead += bytesRead;
+        try {
+            while ((bytesRead = inputStream.read(dataBuffer)) != -1) {
+                // ✅ 检查是否用户点击了取消按钮
+                if (controller.isCancelRequested()) {
+                    // 关闭输入流和输出流 并删除已经下载的 文件
+                    controller.closeStream(inputStream, fileOutputStream, destinationPath);
+                    return false;
+                }
 
-            final double progress = (double) totalBytesRead / contentLength;
-            final String status = String.format("已下载 %.2f MB / %.2f MB",
-                    totalBytesRead / (1024.0 * 1024.0), contentLength / (1024.0 * 1024.0));
+                fileOutputStream.write(dataBuffer, 0, bytesRead);
+                totalBytesRead += bytesRead;
+
+                final double progress = (double) totalBytesRead / contentLength;
+                final String status = String.format("已下载 %.2f MB / %.2f MB",
+                        totalBytesRead / (1024.0 * 1024.0), contentLength / (1024.0 * 1024.0));
+
+                Platform.runLater(() -> {
+                    controller.progressBar.setProgress(progress);
+                    controller.statusLabel.setText(status);
+                });
+            }
+
+            fileOutputStream.close();
 
             Platform.runLater(() -> {
-                controller.progressBar.setProgress(progress);
-                controller.statusLabel.setText(status);
+                controller.progressBar.setProgress(1.0);
+                controller.statusLabel.setText("✅ 文件下载完成");
+                outputArea.appendText("✅ 文件下载完成: " + destinationPath + "\n");
             });
+
+            return true;
+        } catch (IOException e) {
+            if (controller.isCancelRequested()) {
+                Platform.runLater(() -> outputArea.appendText("❌ 下载已取消\n"));
+                return false;
+            }
+            throw e;
         }
-
-        fileOutputStream.close();
-        Platform.runLater(() -> {
-            controller.progressBar.setProgress(1.0);
-            controller.statusLabel.setText("✅ 文件下载完成");
-            outputArea.appendText("✅ 文件下载完成: " + destinationPath + "\n");
-        });
-
-        return true;
     }
 
     /**
@@ -221,6 +242,23 @@ public class JdkInstallerService {
             });
             e.printStackTrace();
             return false;
+        }
+    }
+
+    /**
+     * 🗑️ 自动删除 ZIP 文件
+     *
+     * @param zipPath    ZIP 文件路径
+     * @param outputArea 输出区域
+     */
+    private void autoDeleteZipFile(String zipPath, TextArea outputArea) {
+        File zipFile = new File(zipPath);
+        if (zipFile.exists() && zipFile.isFile()) {
+            if (zipFile.delete()) {
+                Platform.runLater(() -> outputArea.appendText("🗑️ 已自动删除 ZIP 文件: " + zipPath + "\n"));
+            } else {
+                Platform.runLater(() -> outputArea.appendText("⚠️ 删除 ZIP 文件失败: " + zipPath + "\n"));
+            }
         }
     }
 

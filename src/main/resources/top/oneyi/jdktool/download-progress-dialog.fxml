@@ -5,6 +5,7 @@
 <?import javafx.scene.layout.VBox?>
 
 
+<?import javafx.scene.control.Button?>
 <VBox spacing="15" xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml" fx:controller="top.oneyi.jdktool.controller.DownloadProgressDialogController">
     <Label fx:id="sizeLabel"  style="-fx-font-size: 16px; -fx-text-fill: #333;"/>
@@ -13,4 +14,14 @@
     <ProgressBar fx:id="progressBar" style="-fx-accent: #4caf50;"
                  minWidth="400"
                  minHeight="20"/>
+    <!-- 新增取消按钮 -->
+    <Button text="❌ 取消下载" onAction="#onCancelDownload" style="
+                                                     -fx-background-color: #ff4d4d;
+                                                                -fx-text-fill: white;
+                                                                -fx-font-size: 14px;
+                                                                -fx-padding: 10 20;
+                                                                -fx-background-radius: 8;
+                                                                -fx-border-radius: 8;
+                                                                -fx-cursor: hand;" />
+
 </VBox>
