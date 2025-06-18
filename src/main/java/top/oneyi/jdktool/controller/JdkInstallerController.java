@@ -1,7 +1,10 @@
 package top.oneyi.jdktool.controller;
 
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
@@ -21,6 +24,9 @@ public class JdkInstallerController {
 
     @FXML
     private TextArea outputArea;
+
+    @FXML
+    private ComboBox<String> jdkVersionCombo;
 
 
     public void onChooseJdkDir() {
@@ -63,9 +69,76 @@ public class JdkInstallerController {
 
     }
 
+    @FXML
+    private void initialize() {
+        // 初始化 ComboBox 数据
+        ObservableList<String> versions = FXCollections.observableArrayList("8", "11", "17", "21");
+        jdkVersionCombo.setItems(versions);
+        jdkVersionCombo.getSelectionModel().selectFirst(); // 默认选择第一个项
+    }
+
     public void onDownloadJdk() {
         JdkInstallerService service = new JdkInstallerService();
-        service.onDownloadJdk(outputArea);
+        String selectedVersion = jdkVersionCombo.getValue();
+        if (selectedVersion != null) {
+            // 根据 selectedVersion 执行下载逻辑
+            service.onDownloadJdk(outputArea, selectedVersion, this::updateJdkPathInput);
+        } else {
+            outputArea.appendText("❌ 请选择 JDK 版本\n");
+        }
+    }
+    /**
+     * 回调方法：更新 JDK 输入框路径（自动识别解压后的子目录）
+     * @param jdkExtractedPath 解压后的根路径（如 D:\environment\jdk-17）
+     */
+    private void updateJdkPathInput(String jdkExtractedPath) {
+        if (jdkExtractedPath == null || jdkExtractedPath.isEmpty()) {
+            outputArea.appendText("⚠️ 无效的 JDK 路径\n");
+            return;
+        }
+
+        File extractedRoot = new File(jdkExtractedPath);
+
+        // ✅ 检查是否为有效目录
+        if (!extractedRoot.exists() || !extractedRoot.isDirectory()) {
+            outputArea.appendText("⚠️ 解压路径不存在或不是一个有效目录: " + jdkExtractedPath + "\n");
+            return;
+        }
+
+        // ✅ 自动查找包含 bin/java.exe 的子目录（兼容解压后多一层目录的情况）
+        File javaExeFile = findJavaExecutable(extractedRoot);
+
+        if (javaExeFile != null) {
+            File jdkHome = javaExeFile.getParentFile().getParentFile(); // 定位到 JDK 根目录
+            jdkPathField.setText(jdkHome.getAbsolutePath());
+            outputArea.appendText("✅ 已自动定位到 JDK 根目录: " + jdkHome.getAbsolutePath() + "\n");
+        } else {
+            jdkPathField.setText(extractedRoot.getAbsolutePath());
+            outputArea.appendText("⚠️ 未找到 java.exe，已使用默认路径: " + extractedRoot.getAbsolutePath() + "\n");
+        }
+    }
+
+    /**
+     * 查找指定目录下的 bin/java.exe（Windows）或 bin/java（Linux/macOS）
+     */
+    private File findJavaExecutable(File rootDir) {
+        File[] files = rootDir.listFiles();
+
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    File javaExe = new File(file, "bin" + File.separator + "java.exe"); // Windows
+                    if (!javaExe.exists()) {
+                        javaExe = new File(file, "bin" + File.separator + "java"); // Linux/macOS
+                    }
+                    if (javaExe.exists() && javaExe.isFile()) {
+                        return javaExe;
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 
     public void onSetupMaven() {
