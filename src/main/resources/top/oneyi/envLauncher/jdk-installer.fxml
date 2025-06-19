@@ -15,11 +15,11 @@
 
     <!-- 设置 padding -->
     <padding>
-        <Insets top="25" right="25" bottom="15" left="25"/>
+        <Insets top="10" right="10" bottom="10" left="10"/>
     </padding>
 
     <!-- 标题 -->
-    <Label text="JDK 安装配置工具" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+    <Label text="JDK和Maven 安装配置" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
 
     <!-- JDK路径选择 -->
     <HBox spacing="10">

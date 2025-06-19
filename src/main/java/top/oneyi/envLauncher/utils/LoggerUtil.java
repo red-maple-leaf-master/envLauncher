@@ -1,6 +1,10 @@
 package top.oneyi.envLauncher.utils;
 
+import javafx.application.Platform;
 import javafx.scene.control.TextArea;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * @author W
@@ -9,14 +13,23 @@ import javafx.scene.control.TextArea;
  */
 public class LoggerUtil {
 
-    public static TextArea outputArea;
+    private static TextArea logArea;
 
-    public static void info(String log) {
-        if(outputArea != null){
-            outputArea.appendText(log + "\n");
-        } else {
-            throw new RuntimeException("未设置输出区域");
-        }
+    public static void init(TextArea area) {
+        logArea = area;
+    }
 
+    public static void info(String message) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String finalMessage = "[" + LocalDateTime.now().format(formatter) + "] :  " + message + "\n";
+
+        // 确保在 JavaFX 线程中更新 UI
+        Platform.runLater(() -> {
+            if (logArea != null) {
+                logArea.appendText(finalMessage);
+            } else {
+                System.out.println("Logger未初始化，日志输出到控制台：" + finalMessage);
+            }
+        });
     }
 }

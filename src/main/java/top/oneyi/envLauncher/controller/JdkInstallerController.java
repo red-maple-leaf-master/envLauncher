@@ -54,19 +54,19 @@ public class JdkInstallerController {
 
         String javaHome = jdkPathField.getText();
         if (javaHome.isEmpty()) {
-            outputArea.appendText("⚠️ 请先选择 JDK 目录\n");
+            LoggerUtil.info("⚠️ 请先选择 JDK 目录");
             return;
         }
 
-        outputArea.appendText("⚙️ 正在设置环境变量...\n");
+        LoggerUtil.info("⚙ 正在设置环境变量...");
         Platform.runLater(() -> {
             try {
                 EnvUtil.setJdkEnvironmentVariables(javaHome, "%JAVA_HOME%\\bin");
             } catch (Exception e) {
-                outputArea.appendText("⚠️ 设置环境变量失败\n");
+                LoggerUtil.info("⚠️ 设置环境变量失败");
                 throw new RuntimeException(e);
             }
-            outputArea.appendText("✅ 环境变量设置完成，请重启终端或 IDE 生效。\n");
+            LoggerUtil.info("✅ 环境变量设置完成，请重启终端或 IDE 生效.");
         });
     }
 
@@ -76,18 +76,18 @@ public class JdkInstallerController {
     public void onShowCurrentConfig() {
         try {
             String jdkEnv = EnvUtil.getJdkEnvironmentVariables(); // 可以重定向输出到 TextArea
-            outputArea.appendText("🔍 当前 JDK 配置：" + jdkEnv + "\n");
+            LoggerUtil.info("🔍 当前 JDK 配置：" + jdkEnv);
             String mavenEnvironmentVariables = EnvUtil.getMavenEnvironmentVariables();
-            outputArea.appendText("🔍 当前 Maven 配置：" + mavenEnvironmentVariables + "\n");
+            LoggerUtil.info("🔍 当前 Maven 配置：" + mavenEnvironmentVariables);
         } catch (Exception e) {
-            outputArea.appendText("⚠️ 获取配置失败\n");
+            LoggerUtil.info("⚠️ 获取配置失败");
             e.printStackTrace();
         }
 
     }
 
     /**
-     * 初始化 ComboBox 数据
+     * 初始化 基本数据
      */
     @FXML
     private void initialize() {
@@ -108,7 +108,7 @@ public class JdkInstallerController {
         mavenVersionCombo.getSelectionModel().selectFirst(); // 默认选择第一个项
 
         // 设置日志输出类
-        LoggerUtil.outputArea = outputArea;
+        LoggerUtil.init(outputArea);
 
     }
 
@@ -132,7 +132,7 @@ public class JdkInstallerController {
             // 根据 selectedVersion 执行下载逻辑
             service.onDownloadJdk(selectedVersion, this::updateJdkPathInput);
         } else {
-            outputArea.appendText("❌ 请选择 JDK 版本\n");
+            LoggerUtil.info("❌ 请选择 JDK 版本");
         }
     }
 
@@ -144,7 +144,7 @@ public class JdkInstallerController {
      */
     private void updateJdkPathInput(String jdkExtractedPath) {
         if (jdkExtractedPath == null || jdkExtractedPath.isEmpty() || !jdkExtractedPath.toLowerCase().contains("jdk")) {
-            outputArea.appendText("⚠️ 无效的 JDK 路径\n");
+            LoggerUtil.info("⚠ 无效的 JDK 路径");
             return;
         }
 
@@ -152,7 +152,7 @@ public class JdkInstallerController {
 
         // ✅ 检查是否为有效目录
         if (!extractedRoot.exists() || !extractedRoot.isDirectory()) {
-            outputArea.appendText("⚠️ 解压路径不存在或不是一个有效目录: " + jdkExtractedPath + "\n");
+            LoggerUtil.info("⚠ 解压路径不存在或不是一个有效目录: " + jdkExtractedPath);
             return;
         }
 
@@ -162,10 +162,10 @@ public class JdkInstallerController {
         if (javaExeFile != null) {
             File jdkHome = javaExeFile.getParentFile().getParentFile(); // 定位到 JDK 根目录
             jdkPathField.setText(jdkHome.getAbsolutePath());
-            outputArea.appendText("✅ 已自动定位到 JDK 根目录: " + jdkHome.getAbsolutePath() + "\n");
+            LoggerUtil.info("✅ 已自动定位到 JDK 根目录: " + jdkHome.getAbsolutePath());
         } else {
             jdkPathField.setText(extractedRoot.getAbsolutePath());
-            outputArea.appendText("⚠️ 未找到 java.exe，已使用默认路径: " + extractedRoot.getAbsolutePath() + "\n");
+            LoggerUtil.info("⚠️ 未找到 java.exe，已使用默认路径: " + extractedRoot.getAbsolutePath());
         }
     }
 }
