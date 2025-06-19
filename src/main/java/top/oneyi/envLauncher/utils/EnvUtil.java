@@ -7,9 +7,9 @@ import java.io.InputStreamReader;
 /**
  * @author W
  * @date 2025/6/16
- * @description JDK 环境变量配置工具类（支持安全设置 PATH 和 JAVA_HOME）
+ * @description 环境变量配置工具类
  */
-public class JDKUtil {
+public class EnvUtil {
 
 
     /**
@@ -27,6 +27,32 @@ public class JDKUtil {
                 // 英文字母小写
                 if (path.toLowerCase().contains("jdk") || path.toLowerCase().contains("java")) {
                     System.out.println("✅  JDK 路径: " + path);
+                    return path;
+                }
+            }
+
+        }
+        reader.close();
+
+
+        return null;
+    }
+
+    /**
+     * 获取当前设置的 jdk 环境变量
+     */
+    public static String getMavenEnvironmentVariables() throws IOException {
+
+        // 获取 PATH 中的 Java 相关路径
+        Process process2 = Runtime.getRuntime().exec("cmd /c echo %PATH%");
+        BufferedReader reader = new BufferedReader(new InputStreamReader(process2.getInputStream()));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String[] split = line.split(";");
+            for (String path : split) {
+                // 英文字母小写
+                if (path.toLowerCase().contains("maven")) {
+                    System.out.println("✅  maven 路径: " + path);
                     return path;
                 }
             }
@@ -70,6 +96,42 @@ public class JDKUtil {
         printProcessOutput(pathProcess);
 
         System.out.println("✅ JDK 环境变量已设置，请重启电脑生效。");
+
+
+    }
+
+    /**
+     * 设置 JDK 环境变量
+     *
+     * @param mavenHome    MavenHome
+     * @param mavenBinPath mavenBinPath
+     */
+    public static void setMavenEnvironmentVariables(String mavenHome, String mavenBinPath) throws Exception {
+
+        // 设置 JAVA_HOME
+        Process javaHomeProcess = Runtime.getRuntime().exec(
+                "cmd /c setx MAVEN_HOME \"" + mavenHome + "\" /M"
+        );
+        printProcessOutput(javaHomeProcess);
+        // 刷新环境变量
+        setJavaHomeInWindows(mavenHome);
+
+        // 获取当前系统的 PATH
+        String currentPath = System.getenv("PATH");
+
+        currentPath = whetherPathExist(mavenBinPath, currentPath);
+
+        // 使用 reg add 设置 PATH
+        Process pathProcess = Runtime.getRuntime().exec(
+                new String[]{
+                        "cmd.exe", "/c", "reg", "add",
+                        "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment",
+                        "/v", "Path", "/t", "REG_EXPAND_SZ", "/d", "\"" + currentPath + "\"", "/f"
+                }
+        );
+        printProcessOutput(pathProcess);
+
+        System.out.println("✅ Maven 环境变量已设置，请重启电脑生效。");
 
 
     }

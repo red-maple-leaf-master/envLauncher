@@ -15,7 +15,7 @@
 
     <!-- 设置 padding -->
     <padding>
-        <Insets top="25" right="25" bottom="25" left="25"/>
+        <Insets top="25" right="25" bottom="15" left="25"/>
     </padding>
 
     <!-- 标题 -->
@@ -29,7 +29,7 @@
 
     <HBox spacing="10">
         <!--  JDK下载  -->
-        <ComboBox fx:id="jdkVersionCombo" prefWidth="80" prefHeight="15" styleClass="text-field"/>
+        <ComboBox fx:id="jdkVersionCombo" prefWidth="90" prefHeight="15" styleClass="text-field"/>
         <Button text="📥 下载 JDK" onAction="#onDownloadJdk" prefHeight="35" styleClass="button"/>
         <!--  maven 下载  -->
         <ComboBox fx:id="mavenVersionCombo" prefWidth="180" prefHeight="15" styleClass="text-field"/>

@@ -9,7 +9,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
 import top.oneyi.envLauncher.service.JdkInstallerService;
-import top.oneyi.envLauncher.utils.JDKUtil;
+import top.oneyi.envLauncher.utils.EnvUtil;
 import top.oneyi.envLauncher.utils.LoggerUtil;
 import top.oneyi.envLauncher.utils.PathUtils;
 
@@ -61,7 +61,7 @@ public class JdkInstallerController {
         outputArea.appendText("⚙️ 正在设置环境变量...\n");
         Platform.runLater(() -> {
             try {
-                JDKUtil.setJdkEnvironmentVariables(javaHome, "%JAVA_HOME%\\bin");
+                EnvUtil.setJdkEnvironmentVariables(javaHome, "%JAVA_HOME%\\bin");
             } catch (Exception e) {
                 outputArea.appendText("⚠️ 设置环境变量失败\n");
                 throw new RuntimeException(e);
@@ -75,10 +75,12 @@ public class JdkInstallerController {
      */
     public void onShowCurrentConfig() {
         try {
-            String jdkEnv = JDKUtil.getJdkEnvironmentVariables(); // 可以重定向输出到 TextArea
+            String jdkEnv = EnvUtil.getJdkEnvironmentVariables(); // 可以重定向输出到 TextArea
             outputArea.appendText("🔍 当前 JDK 配置：" + jdkEnv + "\n");
+            String mavenEnvironmentVariables = EnvUtil.getMavenEnvironmentVariables();
+            outputArea.appendText("🔍 当前 Maven 配置：" + mavenEnvironmentVariables + "\n");
         } catch (Exception e) {
-            outputArea.appendText("⚠️ 获取 JDK 配置失败\n");
+            outputArea.appendText("⚠️ 获取配置失败\n");
             e.printStackTrace();
         }
 

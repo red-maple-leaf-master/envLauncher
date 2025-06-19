@@ -16,6 +16,10 @@
     -fx-background-radius: 4px;
 }
 
+.text-about {
+    -fx-font-size: 12px;
+}
+
 .button:hover {
     -fx-background-color: #005fa3;
 }

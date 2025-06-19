@@ -10,6 +10,7 @@ import top.oneyi.envLauncher.MainApp;
 import top.oneyi.envLauncher.callback.JdkDownloadCallback;
 import top.oneyi.envLauncher.config.JDKVersionConfig;
 import top.oneyi.envLauncher.controller.DownloadProgressDialogController;
+import top.oneyi.envLauncher.utils.EnvUtil;
 import top.oneyi.envLauncher.utils.LoggerUtil;
 import top.oneyi.envLauncher.utils.PathUtils;
 
@@ -29,8 +30,8 @@ public class JdkInstallerService {
     /**
      * 下载指定版本的 Maven 并解压
      *
-     * @param version    Maven 版本（如 "3.8.8"）
-     * @param callback   下载完成回调
+     * @param version  Maven 版本（如 "3.8.8"）
+     * @param callback 下载完成回调
      */
     public void onSetupMaven(String version, JdkDownloadCallback callback) {
         String baseUrl = "https://archive.apache.org/dist/maven/maven-3/";
@@ -50,7 +51,10 @@ public class JdkInstallerService {
                 // ✅ 创建 Maven 仓库目录
                 createMavenRepository(extractedDir);
                 // ✅ 配置 settings.xml 文件
+                extractedDir = findMavenHome(new File(extractedDir));
                 configureMavenSettings(extractedDir);
+                // ✅ 设置 Maven 环境变量
+                EnvUtil.setMavenEnvironmentVariables(extractedDir, extractedDir + "\\bin");
                 return null;
             }
         };
@@ -98,6 +102,7 @@ public class JdkInstallerService {
 
     /**
      * 创建 Maven 仓库
+     *
      * @param mavenHome Maven 下载目录
      */
     private void createMavenRepository(String mavenHome) {
@@ -117,10 +122,10 @@ public class JdkInstallerService {
 
     /**
      * 配置 Maven 设置
+     *
      * @param mavenHome maven 下载目录
      */
     private void configureMavenSettings(String mavenHome) {
-        mavenHome = findMavenHome(new File(mavenHome));
         File settingsFile = new File(mavenHome, "conf" + File.separator + "settings.xml");
 
         if (!settingsFile.exists()) {
@@ -180,15 +185,15 @@ public class JdkInstallerService {
     /**
      * 下载JDK
      *
-     * @param version    JDK版本
-     * @param callback   回调
+     * @param version  JDK版本
+     * @param callback 回调
      */
     public void onDownloadJdk(String version, JdkDownloadCallback callback) {
         String baseUrl = "https://mirrors.tuna.tsinghua.edu.cn/Adoptium/";
         String jdkDownloadUrl = baseUrl + JDKVersionConfig.getUrl(version);
         String destinationPath = PathUtils.getDownloadPath(version);
 
-        LoggerUtil.info("📥 开始从清华大学镜像下载 JDK: " + version );
+        LoggerUtil.info("📥 开始从清华大学镜像下载 JDK: " + version);
         // 创建下载进度对话框
         DownloadProgressDialogController controller = createDialog("JDK 下载进度");
 
@@ -363,7 +368,7 @@ public class JdkInstallerService {
     /**
      * 🗑️ 自动删除 ZIP 文件
      *
-     * @param zipPath    ZIP 文件路径
+     * @param zipPath ZIP 文件路径
      */
     private void autoDeleteZipFile(String zipPath) {
         File zipFile = new File(zipPath);

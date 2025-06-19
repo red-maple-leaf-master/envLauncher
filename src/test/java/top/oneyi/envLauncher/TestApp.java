@@ -3,6 +3,8 @@ package top.oneyi.envLauncher;
 
 import org.junit.Test;
 
+import java.io.IOException;
+
 
 /**
  * @author W
@@ -13,7 +15,8 @@ public class TestApp {
 
 
     @Test
-    public void  test() {
+    public void  test() throws IOException {
+        Process process2 = Runtime.getRuntime().exec("cmd /c echo %PATH%");
 
     }
 
