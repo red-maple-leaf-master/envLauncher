@@ -1,4 +1,4 @@
-package top.oneyi.jdktool.utils;
+package top.oneyi.envLauncher.utils;
 
 import java.io.File;
 import java.io.FileInputStream;

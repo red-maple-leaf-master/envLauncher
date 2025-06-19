@@ -1,4 +1,4 @@
-package top.oneyi.jdktool.service;
+package top.oneyi.envLauncher.service;
 
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -7,11 +7,12 @@ import javafx.scene.Scene;
 import javafx.scene.control.TextArea;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import top.oneyi.jdktool.MainApp;
-import top.oneyi.jdktool.callback.JdkDownloadCallback;
-import top.oneyi.jdktool.config.JDKVersionConfig;
-import top.oneyi.jdktool.controller.DownloadProgressDialogController;
-import top.oneyi.jdktool.utils.PathUtils;
+import top.oneyi.envLauncher.MainApp;
+import top.oneyi.envLauncher.callback.JdkDownloadCallback;
+import top.oneyi.envLauncher.config.JDKVersionConfig;
+import top.oneyi.envLauncher.controller.DownloadProgressDialogController;
+import top.oneyi.envLauncher.utils.PathUtils;
+
 import java.io.*;
 import java.net.URL;
 

@@ -1,4 +1,4 @@
-package top.oneyi.jdktool.controller;
+package top.oneyi.envLauncher.controller;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -8,9 +8,11 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
-import top.oneyi.jdktool.service.JdkInstallerService;
-import top.oneyi.jdktool.utils.JDKUtil;
-import top.oneyi.jdktool.utils.PathUtils;
+import top.oneyi.envLauncher.service.JdkInstallerService;
+import top.oneyi.envLauncher.utils.JDKUtil;
+import top.oneyi.envLauncher.utils.PathUtils;
+
+
 
 import java.io.File;
 

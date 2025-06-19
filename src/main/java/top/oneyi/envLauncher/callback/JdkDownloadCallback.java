@@ -1,4 +1,4 @@
-package top.oneyi.jdktool.callback;
+package top.oneyi.envLauncher.callback;
 
 /**
  * 下载回调接口

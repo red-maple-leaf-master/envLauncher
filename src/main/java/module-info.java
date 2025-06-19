@@ -6,9 +6,9 @@ module top.oneyi.jdktool {
     requires org.controlsfx.controls;
     requires org.kordamp.bootstrapfx.core;
 
-    opens top.oneyi.jdktool to javafx.fxml;
-    exports top.oneyi.jdktool;
-    opens top.oneyi.jdktool.controller to javafx.fxml;
+    opens top.oneyi.envLauncher to javafx.fxml;
+    exports top.oneyi.envLauncher;
+    opens top.oneyi.envLauncher.controller to javafx.fxml;
 
 
 }

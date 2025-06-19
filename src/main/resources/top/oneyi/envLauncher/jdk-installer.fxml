@@ -11,7 +11,7 @@
 
 <?import javafx.scene.control.ComboBox?>
 <VBox spacing="15" xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml" fx:controller="top.oneyi.jdktool.controller.JdkInstallerController">
+      xmlns:fx="http://javafx.com/fxml" fx:controller="top.oneyi.envLauncher.controller.JdkInstallerController">
 
     <!-- 设置 padding -->
     <padding>

@@ -10,7 +10,7 @@
 <VBox spacing="20"
       xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
-      fx:controller="top.oneyi.jdktool.controller.DownloadProgressDialogController"
+      fx:controller="top.oneyi.envLauncher.controller.DownloadProgressDialogController"
       style="-fx-padding: 20; -fx-alignment: center;">
 
     <!-- 文件大小 -->

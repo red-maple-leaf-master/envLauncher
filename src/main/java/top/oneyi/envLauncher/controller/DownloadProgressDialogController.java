@@ -1,4 +1,4 @@
-package top.oneyi.jdktool.controller;
+package top.oneyi.envLauncher.controller;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;

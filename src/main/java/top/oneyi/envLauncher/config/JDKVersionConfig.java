@@ -1,4 +1,4 @@
-package top.oneyi.jdktool.config;
+package top.oneyi.envLauncher.config;
 
 import java.util.HashMap;
 import java.util.Map;
