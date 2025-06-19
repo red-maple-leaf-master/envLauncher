@@ -10,6 +10,7 @@ import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
 import top.oneyi.envLauncher.service.JdkInstallerService;
 import top.oneyi.envLauncher.utils.JDKUtil;
+import top.oneyi.envLauncher.utils.LoggerUtil;
 import top.oneyi.envLauncher.utils.PathUtils;
 
 
@@ -104,6 +105,9 @@ public class JdkInstallerController {
         mavenVersionCombo.setItems(mavenVersions);
         mavenVersionCombo.getSelectionModel().selectFirst(); // 默认选择第一个项
 
+        // 设置日志输出类
+        LoggerUtil.outputArea = outputArea;
+
     }
 
     /**
@@ -112,7 +116,7 @@ public class JdkInstallerController {
     public void onSetupMaven() {
         JdkInstallerService service = new JdkInstallerService();
         String version = mavenVersionCombo.getValue();
-        service.onSetupMaven(outputArea, version, this::updateJdkPathInput);
+        service.onSetupMaven(version, this::updateJdkPathInput);
     }
 
 
@@ -124,7 +128,7 @@ public class JdkInstallerController {
         String selectedVersion = jdkVersionCombo.getValue();
         if (selectedVersion != null) {
             // 根据 selectedVersion 执行下载逻辑
-            service.onDownloadJdk(outputArea, selectedVersion, this::updateJdkPathInput);
+            service.onDownloadJdk(selectedVersion, this::updateJdkPathInput);
         } else {
             outputArea.appendText("❌ 请选择 JDK 版本\n");
         }
