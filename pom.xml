@@ -67,7 +67,7 @@
                         <!-- Default configuration for running with: mvn clean javafx:run -->
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>top.oneyi.jdktool.MainApp</mainClass>
+                            <mainClass>top.oneyi.envLauncher.MainApp</mainClass>
                             <winLauncherType>gui</winLauncherType> <!-- 关键配置 -->
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>
