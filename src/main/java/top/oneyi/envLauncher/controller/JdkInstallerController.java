@@ -3,6 +3,7 @@ package top.oneyi.envLauncher.controller;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
@@ -47,28 +48,37 @@ public class JdkInstallerController {
         }
     }
 
-    /**
-     * 设置全局的 Java 环境变量
-     */
-    public void onSetEnvironmentVariables() {
+public void onSetEnvironmentVariables() {
+    String javaHome = jdkPathField.getText();
+    if (javaHome.isEmpty()) {
+        LoggerUtil.info("⚠️ 请先选择 JDK 目录");
+        return;
+    }
 
-        String javaHome = jdkPathField.getText();
-        if (javaHome.isEmpty()) {
-            LoggerUtil.info("⚠️ 请先选择 JDK 目录");
-            return;
-        }
+    LoggerUtil.info("⚙ 正在设置环境变量...");
 
-        LoggerUtil.info("⚙ 正在设置环境变量...");
-        Platform.runLater(() -> {
+    // 使用 Task 执行异步操作
+    Task<Void> task = new Task<>() {
+        @Override
+        protected Void call() throws Exception {
             try {
                 EnvUtil.setJdkEnvironmentVariables(javaHome, "%JAVA_HOME%\\bin");
+                Platform.runLater(() ->
+                    LoggerUtil.info("✅ 环境变量设置完成，请重启终端或 IDE 生效.")
+                );
             } catch (Exception e) {
-                LoggerUtil.info("⚠️ 设置环境变量失败");
+                Platform.runLater(() -> {
+                    LoggerUtil.info("⚠️ 设置环境变量失败");
+                });
                 throw new RuntimeException(e);
             }
-            LoggerUtil.info("✅ 环境变量设置完成，请重启终端或 IDE 生效.");
-        });
-    }
+            return null;
+        }
+    };
+
+    new Thread(task).start();
+}
+
 
     /**
      * 显示当前 JDK 配置

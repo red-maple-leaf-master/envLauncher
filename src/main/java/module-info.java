@@ -1,4 +1,4 @@
-module top.oneyi.jdktool {
+module top.oneyi.envLauncher {
     requires javafx.controls;
     requires javafx.fxml;
     requires javafx.graphics;

@@ -83,7 +83,7 @@ public class EnvUtil {
         // 获取当前系统的 PATH
         String currentPath = System.getenv("PATH");
 
-        currentPath = whetherPathExist(jdkBinPath, currentPath);
+        currentPath = filterAndInsertPath(jdkBinPath, currentPath, "java", "jdk");
 
         // 使用 reg add 设置 PATH
         Process pathProcess = Runtime.getRuntime().exec(
@@ -101,7 +101,7 @@ public class EnvUtil {
     }
 
     /**
-     * 设置 JDK 环境变量
+     * 设置 Maven 环境变量
      *
      * @param mavenHome    MavenHome
      * @param mavenBinPath mavenBinPath
@@ -119,7 +119,7 @@ public class EnvUtil {
         // 获取当前系统的 PATH
         String currentPath = System.getenv("PATH");
 
-        currentPath = whetherPathExist(mavenBinPath, currentPath);
+        currentPath = filterAndInsertPath(mavenBinPath, currentPath, "maven");
 
         // 使用 reg add 设置 PATH
         Process pathProcess = Runtime.getRuntime().exec(
@@ -191,6 +191,37 @@ public class EnvUtil {
         Process process = pb.start();
         process.waitFor();
 
+    }
+
+
+    /**
+     * 清理 PATH 中已有的指定类型相关路径，并插入新路径到最前面
+     *
+     * @param binPath     新路径（如 %JAVA_HOME%\bin）
+     * @param currentPath 当前 PATH
+     * @param keywords    要排除的关键词数组（如 ["java", "jdk"]）
+     * @return 优化后的 PATH 字符串
+     */
+    private static String filterAndInsertPath(String binPath, String currentPath, String... keywords) {
+        if (currentPath == null || currentPath.isEmpty()) {
+            return binPath;
+        }
+
+        StringBuilder newPath = new StringBuilder();
+        for (String path : currentPath.split(";")) {
+            boolean matched = false;
+            for (String keyword : keywords) {
+                if (path.toLowerCase().contains(keyword)) {
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) {
+                newPath.append(path).append(";");
+            }
+        }
+
+        return binPath + ";" + newPath.toString();
     }
 
 }
