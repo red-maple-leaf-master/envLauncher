@@ -22,18 +22,85 @@ import java.net.URL;
  * @date 2025/6/17
  * @description JDK安装服务业务层
  */
-public class JdkInstallerService {
+public class EnvInstallerService {
 
     private Stage dialogStage;
+
+    /**
+     * 设置 node
+     * https://npmmirror.com/mirrors/node/v22.16.0/node-v22.16.0-win-x64.zip
+     *
+     * @param version
+     */
+    public void onSetupNode(String version) {
+        String baseUrl = "https://npmmirror.com/mirrors/node/";
+        String nodeUrl = baseUrl + version + "/node-" + version + "-win-x64.zip";
+        LoggerUtil.info("📥 获取 Node.js 官方下载地址: " + nodeUrl);
+        // 创建下载进度对话框
+        DownloadProgressDialogController controller = createDialog("Node 下载进度");
+        String destinationPath = PathUtils.getNodeDownloadPath(version);
+
+        Task<Void> downloadTask = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                downloadFileWithProgress(nodeUrl, destinationPath, controller, dialogStage, null);
+
+
+                // 解压完成，开始查找 Node 根目录
+                String extractedDir = destinationPath.replace(".zip", "");
+                File nodeRoot = findNodeHome(new File(extractedDir));
+
+                if (nodeRoot != null) {
+                    String nodeHome = nodeRoot.getAbsolutePath();
+                    Platform.runLater(() -> LoggerUtil.info("✅ 找到 Node 安装目录: " + nodeHome));
+
+                    // 设置环境变量
+                    EnvUtil.setNodeEnvironmentVariables(nodeHome,"%NODE_HOME%"); // 假设 bin 在当前目录
+                } else {
+                    Platform.runLater(() -> LoggerUtil.info("❌ 未找到 node.exe，请检查解压目录"));
+                }
+
+                return null;
+            }
+        };
+
+        new Thread(downloadTask).start();
+    }
+
+    /**
+     * 查找解压后的 Node 实际根目录（可能嵌套一层）
+     *
+     * @param extractedDir 解压后的根目录
+     * @return 实际包含 node.exe 的目录，找不到返回 null
+     */
+    private File findNodeHome(File extractedDir) {
+        // 先检查当前目录是否包含 node.exe
+        File nodeExe = new File(extractedDir, "node.exe");
+        if (nodeExe.exists()) {
+            return extractedDir;
+        }
+
+        // 否则尝试进入下一级目录查找
+        File[] subDirs = extractedDir.listFiles(File::isDirectory);
+        if (subDirs != null) {
+            for (File subDir : subDirs) {
+                nodeExe = new File(subDir, "node.exe");
+                if (nodeExe.exists()) {
+                    return subDir; // 找到嵌套的 Node 目录
+                }
+            }
+        }
+
+        return null; // 没有找到有效目录
+    }
 
 
     /**
      * 下载指定版本的 Maven 并解压
      *
-     * @param version  Maven 版本（如 "3.8.8"）
-     * @param callback 下载完成回调
+     * @param version Maven 版本（如 "3.8.8"）
      */
-    public void onSetupMaven(String version, JdkDownloadCallback callback) {
+    public void onSetupMaven(String version) {
         String baseUrl = "https://archive.apache.org/dist/maven/maven-3/";
         String mavenUrl = baseUrl + version + "/binaries/apache-maven-" + version + "-bin.zip";
         String destinationPath = PathUtils.getMavenDownloadPath(version);
@@ -45,7 +112,7 @@ public class JdkInstallerService {
         Task<Void> downloadTask = new Task<>() {
             @Override
             protected Void call() throws Exception {
-                downloadFileWithProgress(mavenUrl, destinationPath, controller, dialogStage, callback);
+                downloadFileWithProgress(mavenUrl, destinationPath, controller, dialogStage, null);
                 // 开始设置 maven 配置文件和 maven 仓库
                 String extractedDir = destinationPath.replace(".zip", "");
                 // ✅ 创建 Maven 仓库目录

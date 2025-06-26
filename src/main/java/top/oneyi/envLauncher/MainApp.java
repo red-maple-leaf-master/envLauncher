@@ -16,7 +16,7 @@ public class MainApp extends Application {
 
         URL resource = MainApp.class.getResource("jdk-installer.fxml");
         FXMLLoader fxmlLoader = new FXMLLoader(resource);
-        Scene scene = new Scene(fxmlLoader.load(), 800, 480);
+        Scene scene = new Scene(fxmlLoader.load(), 600, 480);
         String iconPath = getClass().getResource("/icons/env-launcher.png").toExternalForm();
         stage.getIcons().add(new Image(iconPath));
         scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/style.css")).toExternalForm());

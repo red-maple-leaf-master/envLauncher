@@ -9,11 +9,10 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
-import top.oneyi.envLauncher.service.JdkInstallerService;
+import top.oneyi.envLauncher.service.EnvInstallerService;
 import top.oneyi.envLauncher.utils.EnvUtil;
 import top.oneyi.envLauncher.utils.LoggerUtil;
 import top.oneyi.envLauncher.utils.PathUtils;
-
 
 
 import java.io.File;
@@ -21,7 +20,7 @@ import java.io.File;
 /**
  * java 相关环境设置
  */
-public class JdkInstallerController {
+public class EnvInstallerController {
 
     @FXML
     private TextField jdkPathField;
@@ -34,6 +33,9 @@ public class JdkInstallerController {
 
     @FXML
     private ComboBox<String> mavenVersionCombo;
+
+    @FXML
+    private ComboBox<String> nodeVersionCombo;
 
 
     /**
@@ -48,36 +50,36 @@ public class JdkInstallerController {
         }
     }
 
-public void onSetEnvironmentVariables() {
-    String javaHome = jdkPathField.getText();
-    if (javaHome.isEmpty()) {
-        LoggerUtil.info("⚠️ 请先选择 JDK 目录");
-        return;
-    }
-
-    LoggerUtil.info("⚙ 正在设置环境变量...");
-
-    // 使用 Task 执行异步操作
-    Task<Void> task = new Task<>() {
-        @Override
-        protected Void call() throws Exception {
-            try {
-                EnvUtil.setJdkEnvironmentVariables(javaHome, "%JAVA_HOME%\\bin");
-                Platform.runLater(() ->
-                    LoggerUtil.info("✅ 环境变量设置完成，请重启终端或 IDE 生效.")
-                );
-            } catch (Exception e) {
-                Platform.runLater(() -> {
-                    LoggerUtil.info("⚠️ 设置环境变量失败");
-                });
-                throw new RuntimeException(e);
-            }
-            return null;
+    public void onSetEnvironmentVariables() {
+        String javaHome = jdkPathField.getText();
+        if (javaHome.isEmpty()) {
+            LoggerUtil.info("⚠️ 请先选择 JDK 目录");
+            return;
         }
-    };
 
-    new Thread(task).start();
-}
+        LoggerUtil.info("⚙ 正在设置环境变量...");
+
+        // 使用 Task 执行异步操作
+        Task<Void> task = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                try {
+                    EnvUtil.setJdkEnvironmentVariables(javaHome, "%JAVA_HOME%\\bin");
+                    Platform.runLater(() ->
+                            LoggerUtil.info("✅ 环境变量设置完成，请重启终端或 IDE 生效.")
+                    );
+                } catch (Exception e) {
+                    Platform.runLater(() -> {
+                        LoggerUtil.info("⚠️ 设置环境变量失败");
+                    });
+                    throw new RuntimeException(e);
+                }
+                return null;
+            }
+        };
+
+        new Thread(task).start();
+    }
 
 
     /**
@@ -117,6 +119,10 @@ public void onSetEnvironmentVariables() {
         mavenVersionCombo.setItems(mavenVersions);
         mavenVersionCombo.getSelectionModel().selectFirst(); // 默认选择第一个项
 
+        // 初始化 Node 版本选项
+        nodeVersionCombo.getItems().addAll("14.17.0", "14.21.0", "16.17.0", "18.20.8", "20.19.2");
+        nodeVersionCombo.setValue("14.17.0");
+
         // 设置日志输出类
         LoggerUtil.init(outputArea);
 
@@ -126,9 +132,9 @@ public void onSetEnvironmentVariables() {
      * 一键设置 Maven
      */
     public void onSetupMaven() {
-        JdkInstallerService service = new JdkInstallerService();
+        EnvInstallerService service = new EnvInstallerService();
         String version = mavenVersionCombo.getValue();
-        service.onSetupMaven(version, this::updateJdkPathInput);
+        service.onSetupMaven(version);
     }
 
 
@@ -136,7 +142,7 @@ public void onSetEnvironmentVariables() {
      * 下载 JDK
      */
     public void onDownloadJdk() {
-        JdkInstallerService service = new JdkInstallerService();
+        EnvInstallerService service = new EnvInstallerService();
         String selectedVersion = jdkVersionCombo.getValue();
         if (selectedVersion != null) {
             // 根据 selectedVersion 执行下载逻辑
@@ -177,5 +183,15 @@ public void onSetEnvironmentVariables() {
             jdkPathField.setText(extractedRoot.getAbsolutePath());
             LoggerUtil.info("⚠️ 未找到 java.exe，已使用默认路径: " + extractedRoot.getAbsolutePath());
         }
+    }
+
+    /**
+     * 一键设置node
+     */
+    public void onSetupNode() {
+        EnvInstallerService service = new EnvInstallerService();
+        String version = nodeVersionCombo.getValue();
+        String finalVersion = "v" + version;
+        service.onSetupNode(finalVersion);
     }
 }

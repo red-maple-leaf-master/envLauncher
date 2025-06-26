@@ -128,6 +128,16 @@ public class PathUtils {
         return new File(downloadDir, "apache-maven-" + version + ".zip").getAbsolutePath();
     }
 
+    public static String getNodeDownloadPath(String version) {
+        File downloadDir = new File(getCurrentDrive() + "environment");
+
+        if (!downloadDir.exists()) {
+            downloadDir.mkdirs();
+        }
+
+        return new File(downloadDir, "node-" + version + ".zip").getAbsolutePath();
+    }
+
 
 
 }

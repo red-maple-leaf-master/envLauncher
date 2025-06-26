@@ -11,7 +11,7 @@
 
 <?import javafx.scene.control.ComboBox?>
 <VBox spacing="15" xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml" fx:controller="top.oneyi.envLauncher.controller.JdkInstallerController">
+      xmlns:fx="http://javafx.com/fxml" fx:controller="top.oneyi.envLauncher.controller.EnvInstallerController">
 
     <!-- 设置 padding -->
     <padding>
@@ -19,17 +19,17 @@
     </padding>
 
     <!-- 标题 -->
-    <Label text="JDK和Maven 安装配置" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+    <Label text="web开发环境配置" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
 
     <!-- JDK路径选择 -->
     <HBox spacing="10">
-        <TextField fx:id="jdkPathField" editable="false" prefWidth="400" prefHeight="35" styleClass="text-field"/>
+        <TextField fx:id="jdkPathField" editable="false" prefWidth="420" prefHeight="35" styleClass="text-field"/>
         <Button text="📁 选择 JDK 目录" onAction="#onChooseJdkDir" prefHeight="35" styleClass="button"/>
     </HBox>
 
     <HBox spacing="10">
         <!--  JDK下载  -->
-        <ComboBox fx:id="jdkVersionCombo" prefWidth="90" prefHeight="15" styleClass="text-field"/>
+        <ComboBox fx:id="jdkVersionCombo" prefWidth="100" prefHeight="15" styleClass="text-field"/>
         <Button text="📥 下载 JDK" onAction="#onDownloadJdk" prefHeight="35" styleClass="button"/>
         <!--  maven 下载  -->
         <ComboBox fx:id="mavenVersionCombo" prefWidth="180" prefHeight="15" styleClass="text-field"/>
@@ -38,6 +38,9 @@
 
     <!-- 操作按钮 -->
     <HBox spacing="10">
+        <!-- 新增 Node 一键配置按钮 -->
+        <ComboBox fx:id="nodeVersionCombo" prefWidth="120" prefHeight="15" styleClass="text-field"/>
+        <Button text="🔧 一键配置 Node" onAction="#onSetupNode" prefHeight="35" styleClass="button"/>
         <Button text="⚙ 设置Jdk环境变量" onAction="#onSetEnvironmentVariables" prefHeight="35" styleClass="button"/>
         <Button text="🔍 查看当前配置" onAction="#onShowCurrentConfig" prefHeight="35" styleClass="button"/>
     </HBox>
