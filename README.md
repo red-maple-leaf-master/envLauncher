@@ -21,3 +21,4 @@ jpackage --name envLauncher --type app-image -m top.oneyi.jdktool/top.oneyi.jdkt
 ```
 **注意**
 > 需要将电脑的环境切换成jdk17 不然打包会报错 切换jdk的时候切记要重启idea
+> 打包好的exe需要使用管理员运行 因为path设置的时候是使用的注册表的方式
