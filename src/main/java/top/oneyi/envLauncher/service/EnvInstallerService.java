@@ -28,7 +28,7 @@ public class EnvInstallerService {
 
     /**
      * 设置 node
-     * https://npmmirror.com/mirrors/node/v22.16.0/node-v22.16.0-win-x64.zip
+     *
      *
      * @param version
      */

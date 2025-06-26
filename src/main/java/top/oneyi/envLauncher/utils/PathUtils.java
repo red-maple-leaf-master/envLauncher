@@ -118,6 +118,11 @@ public class PathUtils {
         }
     }
 
+    /**
+     * 获取Maven下载路径
+     * @param version 版本号
+     * @return Maven下载路径
+     */
     public static String getMavenDownloadPath(String version) {
         File downloadDir = new File(getCurrentDrive() + "environment");
 
@@ -128,6 +133,11 @@ public class PathUtils {
         return new File(downloadDir, "apache-maven-" + version + ".zip").getAbsolutePath();
     }
 
+    /**
+     * 获取Node下载路径
+     * @param version 节点版本号
+     * @return 节点下载路径
+     */
     public static String getNodeDownloadPath(String version) {
         File downloadDir = new File(getCurrentDrive() + "environment");
 
@@ -136,6 +146,46 @@ public class PathUtils {
         }
 
         return new File(downloadDir, "node-" + version + ".zip").getAbsolutePath();
+    }
+
+    /**
+     * 清理 PATH 中已有的指定类型相关路径，并插入新路径到最前面
+     *
+     * @param binPath     新路径（如 %JAVA_HOME%\bin）
+     * @param currentPath 当前 PATH
+     * @param keywords    要排除的关键词数组（如 ["java", "jdk"]）
+     * @return 优化后的 PATH 字符串
+     */
+    public static String filterAndInsertPath(String binPath, String currentPath, String... keywords) {
+        if (currentPath == null || currentPath.isEmpty()) {
+            return binPath;
+        }
+
+        StringBuilder newPath = new StringBuilder();
+        boolean added = false;
+
+        for (String path : currentPath.split(";")) {
+            boolean matched = false;
+            for (String keyword : keywords) {
+                if (path.toLowerCase().contains(keyword)) {
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) {
+                if (!added) {
+                    newPath.append(binPath).append(";");
+                    added = true;
+                }
+                newPath.append(path).append(";");
+            }
+        }
+
+        if (!added) {
+            newPath.append(binPath);
+        }
+
+        return newPath.toString();
     }
 
 
