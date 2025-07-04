@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 0 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .btn {
+            margin-top: 10px;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #logArea {
+            resize: none;
+            background-color: #f9f9f9;
+        }
+
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Web 开发环境配置</h2>
+
+    <!-- JDK 配置 -->
+    <div class="form-group">
+        <label for="jdkPath">JDK 路径</label>
+        <input type="text" class="form-control" id="jdkPath" placeholder="请选择 JDK 目录">
+        <button type="button" class="btn btn-primary" id="chooseJdk">选择 JDK 目录</button>
+        <button type="button" class="btn btn-secondary" id="downloadJdk">下载 JDK</button>
+        <button type="button" class="btn btn-secondary" id="setupJdkEnv">设置 JDK 环境变量</button>
+    </div>
+
+    <!-- Maven 配置 -->
+    <div class="form-group">
+        <label for="mavenVersion">Maven 版本</label>
+        <select class="form-control" id="mavenVersion">
+            <option>3.0.4</option>
+            <!-- 其他版本选项 -->
+        </select>
+        <button type="button" class="btn btn-primary" id="setupMaven">一键设置 Maven</button>
+    </div>
+
+    <!-- Node 配置 -->
+    <div class="form-group">
+        <label for="nodeVersion">Node 版本</label>
+        <select class="form-control" id="nodeVersion">
+            <option>14.17.0</option>
+            <!-- 其他版本选项 -->
+        </select>
+        <button type="button" class="btn btn-primary" id="setupNode">一键配置 Node</button>
+    </div>
+
+    <!-- 其他配置 -->
+    <div class="form-group">
+        <button type="button" class="btn btn-info" id="viewConfig">查看当前配置</button>
+    </div>
+
+    <!-- 日志输出区 -->
+    <div class="form-group">
+        <label for="logArea">日志输出区</label>
+        <textarea class="form-control" id="logArea" rows="10" readonly></textarea>
+    </div>
+</div>
+</body>
+</html>
