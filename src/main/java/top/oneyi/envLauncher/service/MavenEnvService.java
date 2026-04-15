@@ -11,17 +11,27 @@ public class MavenEnvService extends AbstractPathEnvService {
     }
 
     public void configureMavenEnvironment(String mavenHome, String mavenBinPath) throws Exception {
-        updateEnvironmentVariable("MAVEN_HOME", mavenHome);
-        updateMachinePath(mavenBinPath, "maven");
-        LoggerUtil.info("[MAVEN_HOME] related environment variables updated. Restart terminal or IDE to apply changes.");
+        EnvScope variableScope = updateEnvironmentVariable("MAVEN_HOME", mavenHome);
+        EnvScope pathScope = updatePath(mavenBinPath, "maven");
+        LoggerUtil.info(buildScopeMessage("MAVEN_HOME", variableScope, pathScope));
     }
 
-    private void updateEnvironmentVariable(String variableName, String variableValue) throws Exception {
+    private EnvScope updateEnvironmentVariable(String variableName, String variableValue) throws Exception {
         try {
             windowsEnvCommandService.setMachineEnvironmentVariable(variableName, variableValue);
+            windowsEnvCommandService.setUserRegistryEnvironmentVariable(variableName, variableValue);
+            return EnvScope.MACHINE;
         } catch (IOException e) {
-            LoggerUtil.info("Machine " + variableName + " update failed, fallback to user scope: " + e.getMessage());
+            LoggerUtil.info("System " + variableName + " update failed, fallback to current user scope: " + e.getMessage());
+            windowsEnvCommandService.setUserRegistryEnvironmentVariable(variableName, variableValue);
+            return EnvScope.USER;
         }
-        windowsEnvCommandService.setUserRegistryEnvironmentVariable(variableName, variableValue);
+    }
+
+    private String buildScopeMessage(String variableName, EnvScope variableScope, EnvScope pathScope) {
+        if (variableScope == EnvScope.MACHINE && pathScope == EnvScope.MACHINE) {
+            return "[" + variableName + "] and PATH were updated in system environment variables. Restart terminal or IDE to apply changes.";
+        }
+        return "[" + variableName + "] and PATH were updated in current user environment variables. Restart terminal or IDE to apply changes.";
     }
 }

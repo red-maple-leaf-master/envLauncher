@@ -17,15 +17,15 @@ public class NodeEnvService extends AbstractPathEnvService {
             new File(cachePath).mkdirs();
         }
 
-        updateEnvironmentVariable("NODE_HOME", nodeHome);
+        EnvScope variableScope = updateEnvironmentVariable("NODE_HOME", nodeHome);
 
         // Add the executable path first so npm/cnpm commands resolve against the installed Node version.
-        updateMachinePath(nodePathEntry);
-        updateMachinePath(globalInstallPath);
-        updateMachinePath(cachePath);
+        EnvScope nodePathScope = updatePath(nodePathEntry);
+        EnvScope globalInstallPathScope = updatePath(globalInstallPath);
+        EnvScope cachePathScope = updatePath(cachePath);
         configureNpmPaths(cachePath, globalInstallPath);
 
-        LoggerUtil.info("Node related environment variables updated. Restart terminal or IDE to apply changes.");
+        LoggerUtil.info(buildScopeMessage(variableScope, nodePathScope, globalInstallPathScope, cachePathScope));
     }
 
     public void configureNpmPaths(String cachePath, String globalInstallPath) throws IOException {
@@ -53,12 +53,28 @@ public class NodeEnvService extends AbstractPathEnvService {
         }
     }
 
-    private void updateEnvironmentVariable(String variableName, String variableValue) throws Exception {
+    private EnvScope updateEnvironmentVariable(String variableName, String variableValue) throws Exception {
         try {
             windowsEnvCommandService.setMachineEnvironmentVariable(variableName, variableValue);
+            windowsEnvCommandService.setUserRegistryEnvironmentVariable(variableName, variableValue);
+            return EnvScope.MACHINE;
         } catch (IOException e) {
-            LoggerUtil.info("Machine " + variableName + " update failed, fallback to user scope: " + e.getMessage());
+            LoggerUtil.info("System " + variableName + " update failed, fallback to current user scope: " + e.getMessage());
+            windowsEnvCommandService.setUserRegistryEnvironmentVariable(variableName, variableValue);
+            return EnvScope.USER;
         }
-        windowsEnvCommandService.setUserRegistryEnvironmentVariable(variableName, variableValue);
+    }
+
+    private String buildScopeMessage(EnvScope variableScope,
+                                     EnvScope nodePathScope,
+                                     EnvScope globalInstallPathScope,
+                                     EnvScope cachePathScope) {
+        if (variableScope == EnvScope.MACHINE
+                && nodePathScope == EnvScope.MACHINE
+                && globalInstallPathScope == EnvScope.MACHINE
+                && cachePathScope == EnvScope.MACHINE) {
+            return "NODE_HOME and PATH were updated in system environment variables. Restart terminal or IDE to apply changes.";
+        }
+        return "NODE_HOME and PATH were updated in current user environment variables. Restart terminal or IDE to apply changes.";
     }
 }
