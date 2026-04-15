@@ -24,12 +24,6 @@
                 <Insets top="16" right="16" bottom="16" left="16"/>
             </padding>
 
-            <VBox spacing="6" styleClass="hero-panel">
-                <Label text="Web Dev Environment Setup" styleClass="hero-title"/>
-                <Label text="Choose versions, install components, and apply env settings" styleClass="hero-subtitle"/>
-                <Label fx:id="flowStepLabel" text="Step 1/4: Select install directory" styleClass="hero-subtitle"/>
-            </VBox>
-
             <VBox spacing="12" styleClass="card-panel">
                 <Label text="Install Directory" styleClass="section-title"/>
                 <HBox spacing="10" alignment="CENTER_LEFT">
@@ -54,7 +48,6 @@
                     <ComboBox fx:id="nodeVersionCombo" prefWidth="120" prefHeight="36" styleClass="env-combo"/>
                     <Button fx:id="installNodeButton" text="Install Node" onAction="#onInstallNode" prefHeight="36" styleClass="action-button primary"/>
                     <Button fx:id="showConfigButton" text="Show Config" onAction="#onShowCurrentConfig" prefHeight="36" styleClass="action-button neutral"/>
-                    <Button fx:id="oneClickInstallButton" text="One Click Install" onAction="#onOneClickInstall" prefHeight="36" styleClass="action-button primary"/>
                 </FlowPane>
             </VBox>
 

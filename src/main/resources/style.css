@@ -8,24 +8,6 @@
     -fx-font-family: "Segoe UI", "Microsoft YaHei";
 }
 
-.hero-panel {
-    -fx-padding: 14 16 14 16;
-    -fx-background-color: linear-gradient(to right, #12324f 0%, #1e5a89 100%);
-    -fx-background-radius: 14;
-    -fx-effect: dropshadow(gaussian, rgba(18, 50, 79, 0.25), 14, 0.2, 0, 4);
-}
-
-.hero-title {
-    -fx-font-size: 28px;
-    -fx-font-weight: 800;
-    -fx-text-fill: #ffffff;
-}
-
-.hero-subtitle {
-    -fx-font-size: 13px;
-    -fx-text-fill: rgba(255, 255, 255, 0.85);
-}
-
 .card-panel,
 .log-panel {
     -fx-padding: 12 14 14 14;
