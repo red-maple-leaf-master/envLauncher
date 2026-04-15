@@ -26,15 +26,15 @@
 
             <VBox spacing="6" styleClass="hero-panel">
                 <Label text="Web Dev Environment Setup" styleClass="hero-title"/>
-                <Label text="Choose versions, download components, and apply env settings" styleClass="hero-subtitle"/>
-                <Label fx:id="flowStepLabel" text="Step 1/4: Select JDK directory" styleClass="hero-subtitle"/>
+                <Label text="Choose versions, install components, and apply env settings" styleClass="hero-subtitle"/>
+                <Label fx:id="flowStepLabel" text="Step 1/4: Select install directory" styleClass="hero-subtitle"/>
             </VBox>
 
             <VBox spacing="12" styleClass="card-panel">
-                <Label text="JDK Path" styleClass="section-title"/>
+                <Label text="Install Directory" styleClass="section-title"/>
                 <HBox spacing="10" alignment="CENTER_LEFT">
-                    <TextField fx:id="jdkPathField" editable="false" prefHeight="38" styleClass="path-field" HBox.hgrow="ALWAYS"/>
-                    <Button fx:id="chooseJdkButton" text="Select JDK Dir" onAction="#onChooseJdkDir" prefHeight="38" styleClass="action-button secondary"/>
+                    <TextField fx:id="installDirField" editable="false" prefHeight="38" styleClass="path-field" promptText="Select a required install directory" HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="chooseInstallDirButton" text="Select Install Dir" onAction="#onChooseJdkDir" prefHeight="38" styleClass="action-button secondary"/>
                 </HBox>
             </VBox>
 
@@ -42,9 +42,9 @@
                 <Label text="Component Install" styleClass="section-title"/>
                 <FlowPane hgap="10" vgap="10" styleClass="action-flow" prefWrapLength="760">
                     <ComboBox fx:id="jdkVersionCombo" prefWidth="110" prefHeight="36" styleClass="env-combo"/>
-                    <Button fx:id="downloadJdkButton" text="Download JDK" onAction="#onDownloadJdk" prefHeight="36" styleClass="action-button primary"/>
+                    <Button fx:id="installJdkButton" text="Install JDK" onAction="#onDownloadJdk" prefHeight="36" styleClass="action-button primary"/>
                     <ComboBox fx:id="mavenVersionCombo" prefWidth="170" prefHeight="36" styleClass="env-combo"/>
-                    <Button fx:id="setupMavenButton" text="Setup Maven" onAction="#onSetupMaven" prefHeight="36" styleClass="action-button primary"/>
+                    <Button fx:id="installMavenButton" text="Install Maven" onAction="#onSetupMaven" prefHeight="36" styleClass="action-button primary"/>
                 </FlowPane>
             </VBox>
 
@@ -52,8 +52,7 @@
                 <Label text="Environment" styleClass="section-title"/>
                 <FlowPane hgap="10" vgap="10" styleClass="action-flow" prefWrapLength="760">
                     <ComboBox fx:id="nodeVersionCombo" prefWidth="120" prefHeight="36" styleClass="env-combo"/>
-                    <Button fx:id="setupNodeButton" text="Setup Node" onAction="#onSetupNode" prefHeight="36" styleClass="action-button primary"/>
-                    <Button fx:id="setEnvButton" text="Set JDK Env" onAction="#onSetEnvironmentVariables" prefHeight="36" styleClass="action-button secondary"/>
+                    <Button fx:id="installNodeButton" text="Install Node" onAction="#onSetupNode" prefHeight="36" styleClass="action-button primary"/>
                     <Button fx:id="showConfigButton" text="Show Config" onAction="#onShowCurrentConfig" prefHeight="36" styleClass="action-button neutral"/>
                     <Button fx:id="oneClickInstallButton" text="One Click Install" onAction="#onOneClickInstall" prefHeight="36" styleClass="action-button primary"/>
                 </FlowPane>

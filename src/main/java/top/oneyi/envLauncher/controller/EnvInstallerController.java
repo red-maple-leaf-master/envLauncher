@@ -21,7 +21,7 @@ import java.io.File;
 public class EnvInstallerController {
 
     @FXML
-    private TextField jdkPathField;
+    private TextField installDirField;
     @FXML
     private TextArea outputArea;
 
@@ -40,15 +40,13 @@ public class EnvInstallerController {
     private TextField nodeSourceField;
 
     @FXML
-    private Button chooseJdkButton;
+    private Button chooseInstallDirButton;
     @FXML
-    private Button downloadJdkButton;
+    private Button installJdkButton;
     @FXML
-    private Button setupMavenButton;
+    private Button installMavenButton;
     @FXML
-    private Button setupNodeButton;
-    @FXML
-    private Button setEnvButton;
+    private Button installNodeButton;
     @FXML
     private Button showConfigButton;
     @FXML
@@ -76,51 +74,17 @@ public class EnvInstallerController {
         }
 
         DirectoryChooser chooser = new DirectoryChooser();
-        chooser.setTitle("Select JDK directory");
+        chooser.setTitle("Select install directory");
         File selectedDir = chooser.showDialog(null);
         if (selectedDir != null) {
-            jdkPathField.setText(selectedDir.getAbsolutePath());
-            jdkReady = true;
-            LoggerUtil.info("JDK dir selected: " + selectedDir.getAbsolutePath());
+            installDirField.setText(selectedDir.getAbsolutePath());
+            LoggerUtil.info("Install directory selected: " + selectedDir.getAbsolutePath());
             refreshUiState();
         }
     }
 
     public void onSetEnvironmentVariables() {
-        if (busy) {
-            LoggerUtil.info("Task is running. Please wait.");
-            return;
-        }
-
-        String javaHome = jdkPathField.getText();
-        if (javaHome == null || javaHome.isBlank()) {
-            LoggerUtil.info("Please select JDK directory first.");
-            return;
-        }
-
-        setBusy(true, "Step 4/4: Set JDK environment variables");
-        LoggerUtil.info("Setting JDK environment variables...");
-
-        Task<Void> task = new Task<>() {
-            @Override
-            protected Void call() throws Exception {
-                EnvUtil.setJdkEnvironmentVariables(javaHome, "%JAVA_HOME%\\bin");
-                return null;
-            }
-        };
-
-        task.setOnSucceeded(event -> {
-            jdkEnvReady = true;
-            LoggerUtil.info("JDK environment variables set. Restart terminal or IDE.");
-            setBusy(false, null);
-        });
-
-        task.setOnFailed(event -> {
-            LoggerUtil.info("Set JDK environment failed: " + safeError(task.getException()));
-            setBusy(false, null);
-        });
-
-        new Thread(task, "set-jdk-env-thread").start();
+        applyJdkEnvironment(false);
     }
 
     public void onShowCurrentConfig() {
@@ -183,23 +147,28 @@ public class EnvInstallerController {
             return;
         }
 
+        String baseDir = requireInstallDirectory();
+        if (baseDir == null) {
+            return;
+        }
+
         String version = jdkVersionCombo.getValue();
         if (version == null || version.isBlank()) {
             LoggerUtil.info("Please select a JDK version.");
             return;
         }
 
-        setBusy(true, "Step 2/4: Download JDK");
-        LoggerUtil.info("Start downloading JDK " + version + " ...");
+        setBusy(true, "Step 2/4: Install JDK");
+        LoggerUtil.info("Start installing JDK " + version + " ...");
 
-        service.onDownloadJdk(version, this::updateJdkPathInput, success -> {
+        service.onDownloadJdk(version, baseDir, this::updateJdkPathInput, success -> {
             if (success) {
-                jdkReady = true;
-                LoggerUtil.info("JDK download and unzip completed.");
+                LoggerUtil.info("JDK files installed. Applying JDK environment variables...");
+                applyJdkEnvironment(false);
             } else {
-                LoggerUtil.info("JDK download flow did not complete.");
+                LoggerUtil.info("JDK install did not complete.");
+                setBusy(false, null);
             }
-            setBusy(false, null);
         });
     }
 
@@ -209,16 +178,21 @@ public class EnvInstallerController {
             return;
         }
 
-        String version = mavenVersionCombo.getValue();
-        setBusy(true, "Step 3/4: Setup Maven");
-        LoggerUtil.info("Start Maven setup " + version + " ...");
+        String baseDir = requireInstallDirectory();
+        if (baseDir == null) {
+            return;
+        }
 
-        service.onSetupMaven(version, success -> {
+        String version = mavenVersionCombo.getValue();
+        setBusy(true, "Step 3/4: Install Maven");
+        LoggerUtil.info("Start Maven install " + version + " ...");
+
+        service.onSetupMaven(version, baseDir, success -> {
             if (success) {
                 mavenReady = true;
-                LoggerUtil.info("Maven setup completed.");
+                LoggerUtil.info("Maven install completed.");
             } else {
-                LoggerUtil.info("Maven setup did not complete.");
+                LoggerUtil.info("Maven install did not complete.");
             }
             setBusy(false, null);
         });
@@ -230,21 +204,26 @@ public class EnvInstallerController {
             return;
         }
 
+        String baseDir = requireInstallDirectory();
+        if (baseDir == null) {
+            return;
+        }
+
         String version = nodeVersionCombo.getValue();
         if (version == null || version.isBlank()) {
             LoggerUtil.info("Please select a Node version.");
             return;
         }
 
-        setBusy(true, "Step 3/4: Setup Node");
-        LoggerUtil.info("Start Node setup v" + version + " ...");
+        setBusy(true, "Step 3/4: Install Node");
+        LoggerUtil.info("Start Node install v" + version + " ...");
 
-        service.onSetupNode("v" + version, success -> {
+        service.onSetupNode("v" + version, baseDir, success -> {
             if (success) {
                 nodeReady = true;
-                LoggerUtil.info("Node setup completed.");
+                LoggerUtil.info("Node install completed.");
             } else {
-                LoggerUtil.info("Node setup did not complete.");
+                LoggerUtil.info("Node install did not complete.");
             }
             setBusy(false, null);
         });
@@ -258,14 +237,18 @@ public class EnvInstallerController {
 
         LoggerUtil.info("Start one-click install flow.");
 
-        if (!hasJdkPath()) {
-            LoggerUtil.info("No JDK path detected. Download JDK first.");
-            startOneClickJdk();
+        String baseDir = requireInstallDirectory();
+        if (baseDir == null) {
             return;
         }
 
-        jdkReady = true;
-        startOneClickMaven();
+        if (!jdkReady) {
+            LoggerUtil.info("No JDK detected. Start JDK install first.");
+            startOneClickJdk(baseDir);
+            return;
+        }
+
+        startOneClickMaven(baseDir);
     }
 
     @FXML
@@ -303,10 +286,8 @@ public class EnvInstallerController {
         File javaExeFile = PathUtils.findJavaExecutable(extractedRoot);
         if (javaExeFile != null) {
             File jdkHome = javaExeFile.getParentFile().getParentFile();
-            jdkPathField.setText(jdkHome.getAbsolutePath());
             LoggerUtil.info("JDK home auto-detected: " + jdkHome.getAbsolutePath());
         } else {
-            jdkPathField.setText(extractedRoot.getAbsolutePath());
             LoggerUtil.info("java.exe not found. Use extracted path: " + extractedRoot.getAbsolutePath());
         }
 
@@ -314,7 +295,7 @@ public class EnvInstallerController {
         refreshUiState();
     }
 
-    private void startOneClickJdk() {
+    private void startOneClickJdk(String baseDir) {
         String version = jdkVersionCombo.getValue();
         if (version == null || version.isBlank()) {
             LoggerUtil.info("One-click failed: no JDK version selected.");
@@ -322,36 +303,35 @@ public class EnvInstallerController {
             return;
         }
 
-        setBusy(true, "Step 2/4: Download JDK");
-        service.onDownloadJdk(version, this::updateJdkPathInput, success -> {
+        setBusy(true, "Step 2/4: Install JDK");
+        service.onDownloadJdk(version, baseDir, this::updateJdkPathInput, success -> {
             if (!success) {
-                LoggerUtil.info("One-click interrupted: JDK download failed.");
+                LoggerUtil.info("One-click interrupted: JDK install failed.");
                 setBusy(false, null);
                 return;
             }
-            jdkReady = true;
-            LoggerUtil.info("One-click: JDK done, continue Maven.");
-            startOneClickMaven();
+            LoggerUtil.info("One-click: JDK files installed. Applying JDK environment variables...");
+            applyJdkEnvironment(true, () -> startOneClickMaven(baseDir));
         });
     }
 
-    private void startOneClickMaven() {
-        setBusy(true, "Step 3/4: Setup Maven");
+    private void startOneClickMaven(String baseDir) {
+        setBusy(true, "Step 3/4: Install Maven");
         String mavenVersion = mavenVersionCombo.getValue();
-        service.onSetupMaven(mavenVersion, success -> {
+        service.onSetupMaven(mavenVersion, baseDir, success -> {
             if (!success) {
-                LoggerUtil.info("One-click interrupted: Maven setup failed.");
+                LoggerUtil.info("One-click interrupted: Maven install failed.");
                 setBusy(false, null);
                 return;
             }
             mavenReady = true;
             LoggerUtil.info("One-click: Maven done, continue Node.");
-            startOneClickNode();
+            startOneClickNode(baseDir);
         });
     }
 
-    private void startOneClickNode() {
-        setBusy(true, "Step 3/4: Setup Node");
+    private void startOneClickNode(String baseDir) {
+        setBusy(true, "Step 3/4: Install Node");
         String nodeVersion = nodeVersionCombo.getValue();
         if (nodeVersion == null || nodeVersion.isBlank()) {
             LoggerUtil.info("One-click interrupted: no Node version selected.");
@@ -359,22 +339,27 @@ public class EnvInstallerController {
             return;
         }
 
-        service.onSetupNode("v" + nodeVersion, success -> {
+        service.onSetupNode("v" + nodeVersion, baseDir, success -> {
             if (!success) {
-                LoggerUtil.info("One-click interrupted: Node setup failed.");
+                LoggerUtil.info("One-click interrupted: Node install failed.");
                 setBusy(false, null);
                 return;
             }
             nodeReady = true;
-            LoggerUtil.info("One-click: Node done, continue JDK env.");
-            startOneClickSetJdkEnv();
+            jdkEnvReady = true;
+            LoggerUtil.info("One-click completed.");
+            setBusy(false, "Done: click Show Config to verify");
         });
     }
 
-    private void startOneClickSetJdkEnv() {
-        String javaHome = jdkPathField.getText();
+    private void applyJdkEnvironment(boolean continueFlow) {
+        applyJdkEnvironment(continueFlow, null);
+    }
+
+    private void applyJdkEnvironment(boolean continueFlow, Runnable onSuccess) {
+        String javaHome = resolveInstalledJdkHome();
         if (javaHome == null || javaHome.isBlank()) {
-            LoggerUtil.info("One-click interrupted: JDK path is empty.");
+            LoggerUtil.info(continueFlow ? "One-click interrupted: JDK home is empty." : "Please install JDK first.");
             setBusy(false, null);
             return;
         }
@@ -391,16 +376,23 @@ public class EnvInstallerController {
 
         task.setOnSucceeded(event -> {
             jdkEnvReady = true;
-            LoggerUtil.info("One-click completed.");
-            setBusy(false, "Done: click Show Config to verify");
+            if (continueFlow) {
+                LoggerUtil.info("One-click: JDK environment variables applied. Continue Maven.");
+                if (onSuccess != null) {
+                    onSuccess.run();
+                }
+            } else {
+                LoggerUtil.info("JDK install completed.");
+                setBusy(false, null);
+            }
         });
 
         task.setOnFailed(event -> {
-            LoggerUtil.info("One-click interrupted at JDK env step: " + safeError(task.getException()));
+            LoggerUtil.info((continueFlow ? "One-click interrupted at JDK env step: " : "Set JDK environment failed: ") + safeError(task.getException()));
             setBusy(false, null);
         });
 
-        new Thread(task, "one-click-set-env-thread").start();
+        new Thread(task, continueFlow ? "one-click-set-env-thread" : "set-jdk-env-thread").start();
     }
 
     private void setBusy(boolean busyState, String customStepText) {
@@ -412,14 +404,14 @@ public class EnvInstallerController {
     }
 
     private void refreshUiState() {
-        boolean hasJdk = hasJdkPath();
+        boolean hasInstallDir = hasInstallDirectory();
 
-        chooseJdkButton.setDisable(busy);
-        downloadJdkButton.setDisable(busy);
-        setupMavenButton.setDisable(busy);
-        setupNodeButton.setDisable(busy);
+        chooseInstallDirButton.setDisable(busy);
+        installJdkButton.setDisable(busy || !hasInstallDir);
+        installMavenButton.setDisable(busy || !hasInstallDir);
+        installNodeButton.setDisable(busy || !hasInstallDir);
         showConfigButton.setDisable(busy);
-        oneClickInstallButton.setDisable(busy);
+        oneClickInstallButton.setDisable(busy || !hasInstallDir);
         reloadSourcesButton.setDisable(busy);
         saveSourcesButton.setDisable(busy);
 
@@ -430,21 +422,19 @@ public class EnvInstallerController {
         mavenSourceField.setDisable(busy);
         nodeSourceField.setDisable(busy);
 
-        setEnvButton.setDisable(busy || !hasJdk);
-
         if (busy) {
             return;
         }
-        if (!hasJdk) {
-            flowStepLabel.setText("Step 1/4: Select JDK directory");
+        if (!hasInstallDir) {
+            flowStepLabel.setText("Step 1/4: Select install directory");
             return;
         }
         if (!jdkReady) {
-            flowStepLabel.setText("Step 2/4: Download JDK");
+            flowStepLabel.setText("Step 2/4: Install JDK");
             return;
         }
         if (!mavenReady || !nodeReady) {
-            flowStepLabel.setText("Step 3/4: Setup Maven/Node");
+            flowStepLabel.setText("Step 3/4: Install Maven/Node");
             return;
         }
         if (!jdkEnvReady) {
@@ -460,8 +450,40 @@ public class EnvInstallerController {
         nodeSourceField.setText(DownloadSourceConfig.getNodeBaseUrl());
     }
 
-    private boolean hasJdkPath() {
-        return jdkPathField.getText() != null && !jdkPathField.getText().isBlank();
+    private boolean hasInstallDirectory() {
+        return installDirField.getText() != null && !installDirField.getText().isBlank();
+    }
+
+    private String requireInstallDirectory() {
+        String baseDir = safeTrim(installDirField.getText());
+        if (baseDir.isBlank()) {
+            LoggerUtil.info("Please select install directory first.");
+            return null;
+        }
+        return baseDir;
+    }
+
+    private String resolveInstalledJdkHome() {
+        String baseDir = safeTrim(installDirField.getText());
+        if (baseDir.isBlank()) {
+            return null;
+        }
+
+        String version = safeTrim(jdkVersionCombo.getValue());
+        if (version.isBlank()) {
+            return null;
+        }
+
+        File extractedRoot = new File(PathUtils.getJdkExtractDir(baseDir, version));
+        if (!extractedRoot.exists() || !extractedRoot.isDirectory()) {
+            return null;
+        }
+
+        File javaExeFile = PathUtils.findJavaExecutable(extractedRoot);
+        if (javaExeFile != null) {
+            return javaExeFile.getParentFile().getParentFile().getAbsolutePath();
+        }
+        return extractedRoot.getAbsolutePath();
     }
 
     private boolean isValidUrl(String value) {

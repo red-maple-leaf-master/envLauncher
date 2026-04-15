@@ -31,12 +31,17 @@ public class EnvInstallerService {
     private Stage dialogStage;
 
     public void onSetupNode(String version) {
-        onSetupNode(version, null);
+        onSetupNode(version, PathUtils.getCurrentDrive() + "environment", null);
     }
 
     public void onSetupNode(String version, Consumer<Boolean> doneCallback) {
+        onSetupNode(version, PathUtils.getCurrentDrive() + "environment", doneCallback);
+    }
+
+    public void onSetupNode(String version, String baseDir, Consumer<Boolean> doneCallback) {
         String nodeUrl = DownloadSourceConfig.buildNodeUrl(version);
-        String destinationPath = PathUtils.getNodeDownloadPath(version);
+        String destinationPath = PathUtils.getNodeDownloadPath(baseDir, version);
+        String extractedDir = PathUtils.getNodeExtractDir(baseDir, version);
 
         LoggerUtil.info("Node source: " + DownloadSourceConfig.getNodeBaseUrl());
         LoggerUtil.info("Start Node setup: " + version);
@@ -51,12 +56,11 @@ public class EnvInstallerService {
             @Override
             protected Boolean call() {
                 try {
-                    boolean success = downloadFileWithProgress(nodeUrl, destinationPath, controller, dialogStage, null);
+                    boolean success = downloadFileWithProgress(nodeUrl, destinationPath, extractedDir, controller, dialogStage, null);
                     if (!success) {
                         return false;
                     }
 
-                    String extractedDir = destinationPath.replace(".zip", "");
                     File nodeRoot = findNodeHome(new File(extractedDir));
                     if (nodeRoot == null) {
                         LoggerUtil.info("node.exe not found after unzip.");
@@ -79,12 +83,17 @@ public class EnvInstallerService {
     }
 
     public void onSetupMaven(String version) {
-        onSetupMaven(version, null);
+        onSetupMaven(version, PathUtils.getCurrentDrive() + "environment", null);
     }
 
     public void onSetupMaven(String version, Consumer<Boolean> doneCallback) {
+        onSetupMaven(version, PathUtils.getCurrentDrive() + "environment", doneCallback);
+    }
+
+    public void onSetupMaven(String version, String baseDir, Consumer<Boolean> doneCallback) {
         String mavenUrl = DownloadSourceConfig.buildMavenUrl(version);
-        String destinationPath = PathUtils.getMavenDownloadPath(version);
+        String destinationPath = PathUtils.getMavenDownloadPath(baseDir, version);
+        String extractedDir = PathUtils.getMavenExtractDir(baseDir, version);
 
         LoggerUtil.info("Maven source: " + DownloadSourceConfig.getMavenBaseUrl());
         LoggerUtil.info("Start Maven setup: " + version);
@@ -99,12 +108,11 @@ public class EnvInstallerService {
             @Override
             protected Boolean call() {
                 try {
-                    boolean success = downloadFileWithProgress(mavenUrl, destinationPath, controller, dialogStage, null);
+                    boolean success = downloadFileWithProgress(mavenUrl, destinationPath, extractedDir, controller, dialogStage, null);
                     if (!success) {
                         return false;
                     }
 
-                    String extractedDir = destinationPath.replace(".zip", "");
                     String mavenHome = findMavenHome(new File(extractedDir));
                     if (mavenHome == null) {
                         LoggerUtil.info("Valid Maven root not found.");
@@ -127,10 +135,11 @@ public class EnvInstallerService {
     }
 
     public void onDownloadJdk(String version, JdkDownloadCallback callback) {
-        onDownloadJdk(version, callback, null);
+        onDownloadJdk(version, PathUtils.getCurrentDrive() + "environment", callback, null);
     }
 
     public void onDownloadJdk(String version,
+                              String baseDir,
                               JdkDownloadCallback callback,
                               Consumer<Boolean> doneCallback) {
         String jdkDownloadUrl;
@@ -142,11 +151,12 @@ public class EnvInstallerService {
             return;
         }
 
-        String destinationPath = PathUtils.getDownloadPath(version);
+        String destinationPath = PathUtils.getDownloadPath(baseDir, version);
+        String extractedDir = PathUtils.getJdkExtractDir(baseDir, version);
 
         LoggerUtil.info("JDK source: " + DownloadSourceConfig.getJdkBaseUrl());
         LoggerUtil.info("JDK resolved url: " + jdkDownloadUrl);
-        LoggerUtil.info("Start JDK download: " + version);
+        LoggerUtil.info("Start JDK install: " + version);
 
         DownloadProgressDialogController controller = createDialog("JDK Download Progress");
         if (controller == null) {
@@ -157,7 +167,7 @@ public class EnvInstallerService {
         Task<Boolean> task = new Task<>() {
             @Override
             protected Boolean call() {
-                return downloadFileWithProgress(jdkDownloadUrl, destinationPath, controller, dialogStage, callback);
+                return downloadFileWithProgress(jdkDownloadUrl, destinationPath, extractedDir, controller, dialogStage, callback);
             }
         };
 
@@ -281,6 +291,7 @@ public class EnvInstallerService {
 
     private boolean downloadFileWithProgress(String url,
                                              String destinationPath,
+                                             String extractedDir,
                                              DownloadProgressDialogController controller,
                                              Stage stage,
                                              JdkDownloadCallback callback) {
@@ -295,7 +306,6 @@ public class EnvInstallerService {
                 return false;
             }
 
-            String extractedDir = destinationPath.replace(".zip", "");
             boolean unzipSuccess = unzipAndNotify(destinationPath, extractedDir, controller);
             if (!unzipSuccess) {
                 Platform.runLater(stage::close);

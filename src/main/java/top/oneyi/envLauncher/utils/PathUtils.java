@@ -39,6 +39,15 @@ public class PathUtils {
         return new File(downloadDir, "jdk-" + version + ".zip").getAbsolutePath();
     }
 
+    public static String getDownloadPath(String baseDir, String version) {
+        File downloadDir = getDownloadsDir(baseDir);
+        return new File(downloadDir, "jdk-" + version + ".zip").getAbsolutePath();
+    }
+
+    public static String getJdkExtractDir(String baseDir, String version) {
+        return new File(baseDir, "jdk-" + version).getAbsolutePath();
+    }
+
     /**
      * 查找指定目录下的 bin/java.exe（Windows）或 bin/java（Linux/macOS）
      */
@@ -133,6 +142,15 @@ public class PathUtils {
         return new File(downloadDir, "apache-maven-" + version + ".zip").getAbsolutePath();
     }
 
+    public static String getMavenDownloadPath(String baseDir, String version) {
+        File downloadDir = getDownloadsDir(baseDir);
+        return new File(downloadDir, "apache-maven-" + version + ".zip").getAbsolutePath();
+    }
+
+    public static String getMavenExtractDir(String baseDir, String version) {
+        return new File(baseDir, "apache-maven-" + version).getAbsolutePath();
+    }
+
     /**
      * 获取Node下载路径
      * @param version 节点版本号
@@ -146,6 +164,15 @@ public class PathUtils {
         }
 
         return new File(downloadDir, "node-" + version + ".zip").getAbsolutePath();
+    }
+
+    public static String getNodeDownloadPath(String baseDir, String version) {
+        File downloadDir = getDownloadsDir(baseDir);
+        return new File(downloadDir, "node-" + version + ".zip").getAbsolutePath();
+    }
+
+    public static String getNodeExtractDir(String baseDir, String version) {
+        return new File(baseDir, "node-" + version).getAbsolutePath();
     }
 
     /**
@@ -186,6 +213,14 @@ public class PathUtils {
         }
 
         return newPath.toString();
+    }
+
+    private static File getDownloadsDir(String baseDir) {
+        File downloadDir = new File(baseDir, "downloads");
+        if (!downloadDir.exists()) {
+            downloadDir.mkdirs();
+        }
+        return downloadDir;
     }
 
 
