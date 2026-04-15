@@ -6,11 +6,11 @@ import java.io.IOException;
 
 public class JdkEnvService extends AbstractPathEnvService {
 
-    public String getJdkEnvironmentVariables() throws IOException {
-        return windowsEnvCommandService.readPathContaining("jdk", "java");
+    public String getConfiguredJdkPath() throws IOException {
+        return windowsEnvCommandService.findPathEntryContaining("jdk", "java");
     }
 
-    public void setJdkEnvironmentVariables(String javaHome, String jdkBinPath) throws Exception {
+    public void configureJdkEnvironment(String javaHome, String jdkBinPath) throws Exception {
         windowsEnvCommandService.setMachineEnvironmentVariable("JAVA_HOME", javaHome);
         windowsEnvCommandService.setUserRegistryEnvironmentVariable("JAVA_HOME", javaHome);
         updateMachinePath(jdkBinPath, "jdk", "java");

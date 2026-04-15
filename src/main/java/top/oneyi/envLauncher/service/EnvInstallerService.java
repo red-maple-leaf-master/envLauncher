@@ -27,19 +27,21 @@ import java.util.function.Consumer;
 
 public class EnvInstallerService {
 
+    private static final String DEFAULT_INSTALL_ROOT = PathUtils.getCurrentDrive() + "environment";
+
     private Stage dialogStage;
     private final MavenEnvService mavenEnvService = new MavenEnvService();
     private final NodeEnvService nodeEnvService = new NodeEnvService();
 
-    public void onSetupNode(String version) {
-        onSetupNode(version, PathUtils.getCurrentDrive() + "environment", null);
+    public void installNode(String version) {
+        installNode(version, DEFAULT_INSTALL_ROOT, null);
     }
 
-    public void onSetupNode(String version, Consumer<Boolean> doneCallback) {
-        onSetupNode(version, PathUtils.getCurrentDrive() + "environment", doneCallback);
+    public void installNode(String version, Consumer<Boolean> doneCallback) {
+        installNode(version, DEFAULT_INSTALL_ROOT, doneCallback);
     }
 
-    public void onSetupNode(String version, String baseDir, Consumer<Boolean> doneCallback) {
+    public void installNode(String version, String baseDir, Consumer<Boolean> doneCallback) {
         String nodeUrl = DownloadSourceConfig.buildNodeUrl(version);
         String destinationPath = PathUtils.getNodeDownloadPath(baseDir, version);
         String extractedDir = PathUtils.getNodeExtractDir(baseDir, version);
@@ -70,7 +72,7 @@ public class EnvInstallerService {
 
                     String nodeHome = nodeRoot.getAbsolutePath();
                     LoggerUtil.info("Node home found: " + nodeHome);
-                    nodeEnvService.setNodeEnvironmentVariables(nodeHome, "%NODE_HOME%");
+                    nodeEnvService.configureNodeEnvironment(nodeHome, "%NODE_HOME%");
                     return true;
                 } catch (Exception e) {
                     LoggerUtil.info("Node setup failed: " + safeError(e));
@@ -83,15 +85,15 @@ public class EnvInstallerService {
         new Thread(task, "setup-node-thread").start();
     }
 
-    public void onSetupMaven(String version) {
-        onSetupMaven(version, PathUtils.getCurrentDrive() + "environment", null);
+    public void installMaven(String version) {
+        installMaven(version, DEFAULT_INSTALL_ROOT, null);
     }
 
-    public void onSetupMaven(String version, Consumer<Boolean> doneCallback) {
-        onSetupMaven(version, PathUtils.getCurrentDrive() + "environment", doneCallback);
+    public void installMaven(String version, Consumer<Boolean> doneCallback) {
+        installMaven(version, DEFAULT_INSTALL_ROOT, doneCallback);
     }
 
-    public void onSetupMaven(String version, String baseDir, Consumer<Boolean> doneCallback) {
+    public void installMaven(String version, String baseDir, Consumer<Boolean> doneCallback) {
         String mavenUrl = DownloadSourceConfig.buildMavenUrl(version);
         String destinationPath = PathUtils.getMavenDownloadPath(baseDir, version);
         String extractedDir = PathUtils.getMavenExtractDir(baseDir, version);
@@ -122,7 +124,7 @@ public class EnvInstallerService {
 
                     createMavenRepository(mavenHome);
                     configureMavenSettings(mavenHome);
-                    mavenEnvService.setMavenEnvironmentVariables(mavenHome, mavenHome + "\\bin");
+                    mavenEnvService.configureMavenEnvironment(mavenHome, mavenHome + "\\bin");
                     return true;
                 } catch (Exception e) {
                     LoggerUtil.info("Maven setup failed: " + safeError(e));
@@ -135,14 +137,14 @@ public class EnvInstallerService {
         new Thread(task, "setup-maven-thread").start();
     }
 
-    public void onDownloadJdk(String version, JdkDownloadCallback callback) {
-        onDownloadJdk(version, PathUtils.getCurrentDrive() + "environment", callback, null);
+    public void downloadJdk(String version, JdkDownloadCallback callback) {
+        downloadJdk(version, DEFAULT_INSTALL_ROOT, callback, null);
     }
 
-    public void onDownloadJdk(String version,
-                              String baseDir,
-                              JdkDownloadCallback callback,
-                              Consumer<Boolean> doneCallback) {
+    public void downloadJdk(String version,
+                            String baseDir,
+                            JdkDownloadCallback callback,
+                            Consumer<Boolean> doneCallback) {
         String jdkDownloadUrl;
         try {
             jdkDownloadUrl = DownloadSourceConfig.buildJdkUrl(version);
@@ -152,7 +154,7 @@ public class EnvInstallerService {
             return;
         }
 
-        String destinationPath = PathUtils.getDownloadPath(baseDir, version);
+        String destinationPath = PathUtils.getJdkDownloadPath(baseDir, version);
         String extractedDir = PathUtils.getJdkExtractDir(baseDir, version);
 
         LoggerUtil.info("JDK source: " + DownloadSourceConfig.getJdkBaseUrl());
@@ -255,6 +257,7 @@ public class EnvInstallerService {
                 }
             }
 
+            // Keep the repository inside the installed Maven directory so one-click installs stay self-contained.
             String localRepoPath = new File(mavenHome, "maven-repository").getAbsolutePath().replace("\\", "\\\\");
             String updated = content.toString();
 
@@ -271,6 +274,7 @@ public class EnvInstallerService {
                     "      <url>https://maven.aliyun.com/repository/public</url>" + System.lineSeparator() +
                     "    </mirror>" + System.lineSeparator();
 
+            // Only inject the mirror once to avoid rewriting user-customized settings on repeated installs.
             if (!updated.contains("<id>aliyunmaven</id>")) {
                 if (updated.contains("<mirrors>")) {
                     updated = updated.replace("</mirrors>", aliyunMirror + "  </mirrors>");

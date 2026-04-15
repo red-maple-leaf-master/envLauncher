@@ -10,13 +10,12 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 /**
- * 路径工具类
+ * Path helpers for download locations, extraction folders, and PATH entry updates.
  */
 public class PathUtils {
 
     /**
-     * 获取当前驱动器的根目录
-     * @return 当前驱动器的根目录
+     * Resolve the current workspace drive so default installs stay on the same disk.
      */
     public static String getCurrentDrive() {
         String userDir = System.getProperty("user.dir");
@@ -25,11 +24,9 @@ public class PathUtils {
     }
 
     /**
-     * 获取下载路径
-     * @param version 版本号
-     * @return 下载的路径
+     * Build the default JDK archive path under the workspace drive.
      */
-    public static String getDownloadPath(String version) {
+    public static String getJdkDownloadPath(String version) {
         File downloadDir = new File(getCurrentDrive() + "environment");
 
         if (!downloadDir.exists()) {
@@ -39,7 +36,7 @@ public class PathUtils {
         return new File(downloadDir, "jdk-" + version + ".zip").getAbsolutePath();
     }
 
-    public static String getDownloadPath(String baseDir, String version) {
+    public static String getJdkDownloadPath(String baseDir, String version) {
         File downloadDir = getDownloadsDir(baseDir);
         return new File(downloadDir, "jdk-" + version + ".zip").getAbsolutePath();
     }
@@ -49,7 +46,7 @@ public class PathUtils {
     }
 
     /**
-     * 查找指定目录下的 bin/java.exe（Windows）或 bin/java（Linux/macOS）
+     * Some JDK archives add an extra version folder, so scan one level down for the runtime executable.
      */
     public static File findJavaExecutable(File rootDir) {
         File[] files = rootDir.listFiles();
@@ -57,9 +54,9 @@ public class PathUtils {
         if (files != null) {
             for (File file : files) {
                 if (file.isDirectory()) {
-                    File javaExe = new File(file, "bin" + File.separator + "java.exe"); // Windows
+                    File javaExe = new File(file, "bin" + File.separator + "java.exe");
                     if (!javaExe.exists()) {
-                        javaExe = new File(file, "bin" + File.separator + "java"); // Linux/macOS
+                        javaExe = new File(file, "bin" + File.separator + "java");
                     }
                     if (javaExe.exists() && javaExe.isFile()) {
                         return javaExe;
@@ -72,10 +69,7 @@ public class PathUtils {
     }
 
     /**
-     *  获取文件大小
-     * @param url   文件URL
-     * @return
-     * @throws IOException
+     * Read the remote file size before download so the UI can render progress.
      */
     public static long getFileSize(String url) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
@@ -86,10 +80,7 @@ public class PathUtils {
     }
 
     /**
-     * 解压zip文件
-     * @param zipFilePath zip文件路径
-     * @param destDirectory 解压目标目录
-     * @throws IOException
+     * Unzip the downloaded archive into the target directory.
      */
     public static void unzipFile(String zipFilePath, String destDirectory) throws IOException {
         File destDir = new File(destDirectory);
@@ -99,28 +90,23 @@ public class PathUtils {
 
         try (ZipInputStream zipIn = new ZipInputStream(new FileInputStream(zipFilePath))) {
             ZipEntry entry = zipIn.getNextEntry();
-            // 缓存大小
             byte[] buffer = new byte[1024];
-            int len;
 
             while (entry != null) {
                 String filePath = destDirectory + File.separator + entry.getName();
                 File newFile = new File(filePath);
 
-                // 创建父目录
                 if (entry.isDirectory()) {
                     newFile.mkdirs();
                 } else {
-                    // 确保父目录存在
                     new File(newFile.getParent()).mkdirs();
 
-                    // 写入文件
-                    FileOutputStream fos = new FileOutputStream(newFile);
-                    int read;
-                    while ((read = zipIn.read(buffer)) > 0) {
-                        fos.write(buffer, 0, read);
+                    try (FileOutputStream fileOutputStream = new FileOutputStream(newFile)) {
+                        int bytesRead;
+                        while ((bytesRead = zipIn.read(buffer)) > 0) {
+                            fileOutputStream.write(buffer, 0, bytesRead);
+                        }
                     }
-                    fos.close();
                 }
                 entry = zipIn.getNextEntry();
             }
@@ -128,9 +114,7 @@ public class PathUtils {
     }
 
     /**
-     * 获取Maven下载路径
-     * @param version 版本号
-     * @return Maven下载路径
+     * Build the default Maven archive path under the workspace drive.
      */
     public static String getMavenDownloadPath(String version) {
         File downloadDir = new File(getCurrentDrive() + "environment");
@@ -152,9 +136,7 @@ public class PathUtils {
     }
 
     /**
-     * 获取Node下载路径
-     * @param version 节点版本号
-     * @return 节点下载路径
+     * Build the default Node archive path under the workspace drive.
      */
     public static String getNodeDownloadPath(String version) {
         File downloadDir = new File(getCurrentDrive() + "environment");
@@ -176,43 +158,38 @@ public class PathUtils {
     }
 
     /**
-     * 清理 PATH 中已有的指定类型相关路径，并插入新路径到最前面
-     *
-     * @param binPath     新路径（如 %JAVA_HOME%\bin）
-     * @param currentPath 当前 PATH
-     * @param keywords    要排除的关键词数组（如 ["java", "jdk"]）
-     * @return 优化后的 PATH 字符串
+     * Remove stale tool-specific entries before inserting the new path at the front of PATH.
      */
-    public static String filterAndInsertPath(String binPath, String currentPath, String... keywords) {
+    public static String filterAndInsertPath(String pathEntry, String currentPath, String... keywords) {
         if (currentPath == null || currentPath.isEmpty()) {
-            return binPath;
+            return pathEntry;
         }
 
-        StringBuilder newPath = new StringBuilder();
-        boolean added = false;
+        StringBuilder mergedPath = new StringBuilder();
+        boolean pathInserted = false;
 
-        for (String path : currentPath.split(";")) {
-            boolean matched = false;
+        for (String currentEntry : currentPath.split(";")) {
+            boolean shouldExclude = false;
             for (String keyword : keywords) {
-                if (path.toLowerCase().contains(keyword)) {
-                    matched = true;
+                if (currentEntry.toLowerCase().contains(keyword.toLowerCase())) {
+                    shouldExclude = true;
                     break;
                 }
             }
-            if (!matched) {
-                if (!added) {
-                    newPath.append(binPath).append(";");
-                    added = true;
+            if (!shouldExclude) {
+                if (!pathInserted) {
+                    mergedPath.append(pathEntry).append(";");
+                    pathInserted = true;
                 }
-                newPath.append(path).append(";");
+                mergedPath.append(currentEntry).append(";");
             }
         }
 
-        if (!added) {
-            newPath.append(binPath);
+        if (!pathInserted) {
+            mergedPath.append(pathEntry);
         }
 
-        return newPath.toString();
+        return mergedPath.toString();
     }
 
     private static File getDownloadsDir(String baseDir) {
@@ -222,7 +199,4 @@ public class PathUtils {
         }
         return downloadDir;
     }
-
-
-
 }

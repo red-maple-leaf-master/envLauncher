@@ -13,13 +13,13 @@ public abstract class AbstractPathEnvService {
     protected final WindowsEnvCommandService windowsEnvCommandService = new WindowsEnvCommandService();
     private String cachedPath;
 
-    protected void updateMachinePath(String pathHome, String... excludeKeywords) throws IOException {
+    protected void updateMachinePath(String pathEntry, String... excludeKeywords) throws IOException {
         // Keep using the current process PATH as the merge base to preserve existing behavior.
         if (cachedPath == null) {
             cachedPath = System.getenv("PATH");
         }
 
-        cachedPath = PathUtils.filterAndInsertPath(pathHome, cachedPath, excludeKeywords);
+        cachedPath = PathUtils.filterAndInsertPath(pathEntry, cachedPath, excludeKeywords);
         windowsEnvCommandService.updateMachinePath(cachedPath);
     }
 }

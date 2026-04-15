@@ -7,9 +7,9 @@ import java.io.IOException;
 
 public class NodeEnvService extends AbstractPathEnvService {
 
-    public void setNodeEnvironmentVariables(String nodePath, String nodeHome) throws Exception {
-        String globalInstallPath = nodePath + "\\node_global";
-        String cachePath = nodePath + "\\node_cache";
+    public void configureNodeEnvironment(String nodeHome, String nodePathEntry) throws Exception {
+        String globalInstallPath = nodeHome + "\\node_global";
+        String cachePath = nodeHome + "\\node_cache";
         if (!new File(globalInstallPath).exists()) {
             new File(globalInstallPath).mkdirs();
         }
@@ -17,18 +17,19 @@ public class NodeEnvService extends AbstractPathEnvService {
             new File(cachePath).mkdirs();
         }
 
-        windowsEnvCommandService.setMachineEnvironmentVariable("NODE_HOME", nodePath);
-        windowsEnvCommandService.setUserRegistryEnvironmentVariable("NODE_HOME", nodePath);
+        windowsEnvCommandService.setMachineEnvironmentVariable("NODE_HOME", nodeHome);
+        windowsEnvCommandService.setUserRegistryEnvironmentVariable("NODE_HOME", nodeHome);
 
-        updateMachinePath(nodeHome);
+        // Add the executable path first so npm/cnpm commands resolve against the installed Node version.
+        updateMachinePath(nodePathEntry);
         updateMachinePath(globalInstallPath);
         updateMachinePath(cachePath);
-        setNpmConfig(cachePath, globalInstallPath);
+        configureNpmPaths(cachePath, globalInstallPath);
 
         LoggerUtil.info("Node related environment variables updated. Restart terminal or IDE to apply changes.");
     }
 
-    public void setNpmConfig(String cachePath, String globalInstallPath) throws IOException {
+    public void configureNpmPaths(String cachePath, String globalInstallPath) throws IOException {
         try {
             String cacheCommand = "npm config set cache \"" + cachePath + "\" --location=global";
             String cacheResult = windowsEnvCommandService.executeCommand(cacheCommand);

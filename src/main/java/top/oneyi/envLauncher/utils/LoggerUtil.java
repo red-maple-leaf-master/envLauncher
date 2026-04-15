@@ -7,9 +7,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * @author W
- * @date 2025/6/19
- * @description 日志输出类
+ * Sends timestamped log messages to the shared UI console.
  */
 public class LoggerUtil {
 
@@ -21,14 +19,14 @@ public class LoggerUtil {
 
     public static void info(String message) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        String finalMessage = "[" + LocalDateTime.now().format(formatter) + "] :  " + message + "\n";
+        String formattedMessage = "[" + LocalDateTime.now().format(formatter) + "] :  " + message + "\n";
 
-        // 确保在 JavaFX 线程中更新 UI
+        // Always switch back to the JavaFX thread because most logs originate from background tasks.
         Platform.runLater(() -> {
             if (logArea != null) {
-                logArea.appendText(finalMessage);
+                logArea.appendText(formattedMessage);
             } else {
-                System.out.println("Logger未初始化，日志输出到控制台：" + finalMessage);
+                System.out.println("Logger not initialized, writing to console instead: " + formattedMessage);
             }
         });
     }

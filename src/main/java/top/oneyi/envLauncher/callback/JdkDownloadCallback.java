@@ -1,9 +1,9 @@
 package top.oneyi.envLauncher.callback;
 
 /**
- * 下载回调接口
+ * Notifies the caller when the JDK archive has been downloaded and extracted.
  */
 @FunctionalInterface
 public interface JdkDownloadCallback {
-    void onDownloadComplete(String jdkPath);
+    void onDownloadComplete(String extractedJdkDir);
 }

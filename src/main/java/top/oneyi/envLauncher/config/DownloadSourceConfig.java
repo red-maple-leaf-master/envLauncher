@@ -67,7 +67,7 @@ public final class DownloadSourceConfig {
             return template.replace("{version}", version);
         }
 
-        String artifactPath = JDKVersionConfig.getArtifactPath(version);
+        String artifactPath = JdkVersionConfig.getArtifactPath(version);
         if (artifactPath == null || artifactPath.isBlank()) {
             throw new IllegalArgumentException("Unsupported JDK version: " + version);
         }
@@ -124,7 +124,7 @@ public final class DownloadSourceConfig {
 
         Properties merged = new Properties(defaults);
 
-        // Load bundled defaults first.
+        // Load bundled defaults first so external overrides only need to provide changed keys.
         try (InputStream in = DownloadSourceConfig.class.getClassLoader().getResourceAsStream(LOCAL_FILE_NAME)) {
             if (in != null) {
                 merged.load(in);

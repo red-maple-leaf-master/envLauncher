@@ -70,7 +70,7 @@ public class EnvInstallerController {
     private boolean jdkEnvReady;
     private boolean busy;
 
-    public void onChooseJdkDir() {
+    public void onChooseInstallDirectory() {
         if (busy) {
             LoggerUtil.info("Task is running. Please wait.");
             return;
@@ -97,8 +97,8 @@ public class EnvInstallerController {
         }
 
         try {
-            String jdkEnv = jdkEnvService.getJdkEnvironmentVariables();
-            String mavenEnv = mavenEnvService.getMavenEnvironmentVariables();
+            String jdkEnv = jdkEnvService.getConfiguredJdkPath();
+            String mavenEnv = mavenEnvService.getConfiguredMavenPath();
             LoggerUtil.info("Current JDK config: " + jdkEnv);
             LoggerUtil.info("Current Maven config: " + mavenEnv);
             LoggerUtil.info("Download source (JDK): " + DownloadSourceConfig.getJdkBaseUrl());
@@ -144,7 +144,7 @@ public class EnvInstallerController {
         }
     }
 
-    public void onDownloadJdk() {
+    public void onInstallJdk() {
         if (busy) {
             LoggerUtil.info("Task is running. Please wait.");
             return;
@@ -164,7 +164,7 @@ public class EnvInstallerController {
         setBusy(true, "Step 2/4: Install JDK");
         LoggerUtil.info("Start installing JDK " + version + " ...");
 
-        service.onDownloadJdk(version, baseDir, this::updateJdkPathInput, success -> {
+        service.downloadJdk(version, baseDir, this::handleJdkInstalled, success -> {
             if (success) {
                 LoggerUtil.info("JDK files installed. Applying JDK environment variables...");
                 applyJdkEnvironment(false);
@@ -175,7 +175,7 @@ public class EnvInstallerController {
         });
     }
 
-    public void onSetupMaven() {
+    public void onInstallMaven() {
         if (busy) {
             LoggerUtil.info("Task is running. Please wait.");
             return;
@@ -190,7 +190,7 @@ public class EnvInstallerController {
         setBusy(true, "Step 3/4: Install Maven");
         LoggerUtil.info("Start Maven install " + version + " ...");
 
-        service.onSetupMaven(version, baseDir, success -> {
+        service.installMaven(version, baseDir, success -> {
             if (success) {
                 mavenReady = true;
                 LoggerUtil.info("Maven install completed.");
@@ -201,7 +201,7 @@ public class EnvInstallerController {
         });
     }
 
-    public void onSetupNode() {
+    public void onInstallNode() {
         if (busy) {
             LoggerUtil.info("Task is running. Please wait.");
             return;
@@ -221,7 +221,7 @@ public class EnvInstallerController {
         setBusy(true, "Step 3/4: Install Node");
         LoggerUtil.info("Start Node install v" + version + " ...");
 
-        service.onSetupNode("v" + version, baseDir, success -> {
+        service.installNode("v" + version, baseDir, success -> {
             if (success) {
                 nodeReady = true;
                 LoggerUtil.info("Node install completed.");
@@ -274,18 +274,19 @@ public class EnvInstallerController {
         refreshUiState();
     }
 
-    private void updateJdkPathInput(String jdkExtractedPath) {
-        if (jdkExtractedPath == null || jdkExtractedPath.isBlank()) {
+    private void handleJdkInstalled(String extractedJdkDir) {
+        if (extractedJdkDir == null || extractedJdkDir.isBlank()) {
             LoggerUtil.info("Invalid JDK path.");
             return;
         }
 
-        File extractedRoot = new File(jdkExtractedPath);
+        File extractedRoot = new File(extractedJdkDir);
         if (!extractedRoot.exists() || !extractedRoot.isDirectory()) {
-            LoggerUtil.info("Extracted path is invalid: " + jdkExtractedPath);
+            LoggerUtil.info("Extracted path is invalid: " + extractedJdkDir);
             return;
         }
 
+        // Prefer the detected JDK home so later env setup targets the actual bin folder.
         File javaExeFile = PathUtils.findJavaExecutable(extractedRoot);
         if (javaExeFile != null) {
             File jdkHome = javaExeFile.getParentFile().getParentFile();
@@ -307,7 +308,7 @@ public class EnvInstallerController {
         }
 
         setBusy(true, "Step 2/4: Install JDK");
-        service.onDownloadJdk(version, baseDir, this::updateJdkPathInput, success -> {
+        service.downloadJdk(version, baseDir, this::handleJdkInstalled, success -> {
             if (!success) {
                 LoggerUtil.info("One-click interrupted: JDK install failed.");
                 setBusy(false, null);
@@ -321,7 +322,7 @@ public class EnvInstallerController {
     private void startOneClickMaven(String baseDir) {
         setBusy(true, "Step 3/4: Install Maven");
         String mavenVersion = mavenVersionCombo.getValue();
-        service.onSetupMaven(mavenVersion, baseDir, success -> {
+        service.installMaven(mavenVersion, baseDir, success -> {
             if (!success) {
                 LoggerUtil.info("One-click interrupted: Maven install failed.");
                 setBusy(false, null);
@@ -342,7 +343,7 @@ public class EnvInstallerController {
             return;
         }
 
-        service.onSetupNode("v" + nodeVersion, baseDir, success -> {
+        service.installNode("v" + nodeVersion, baseDir, success -> {
             if (!success) {
                 LoggerUtil.info("One-click interrupted: Node install failed.");
                 setBusy(false, null);
@@ -372,7 +373,7 @@ public class EnvInstallerController {
         Task<Void> task = new Task<>() {
             @Override
             protected Void call() throws Exception {
-                jdkEnvService.setJdkEnvironmentVariables(javaHome, "%JAVA_HOME%\\bin");
+                jdkEnvService.configureJdkEnvironment(javaHome, "%JAVA_HOME%\\bin");
                 return null;
             }
         };
@@ -482,6 +483,7 @@ public class EnvInstallerController {
             return null;
         }
 
+        // Resolve the nested JDK home because different archives may unzip into an extra version folder.
         File javaExeFile = PathUtils.findJavaExecutable(extractedRoot);
         if (javaExeFile != null) {
             return javaExeFile.getParentFile().getParentFile().getAbsolutePath();

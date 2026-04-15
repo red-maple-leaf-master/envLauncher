@@ -11,7 +11,7 @@ import java.nio.charset.Charset;
  */
 public class WindowsEnvCommandService {
 
-    public String readPathContaining(String... keywords) throws IOException {
+    public String findPathEntryContaining(String... keywords) throws IOException {
         String pathValue = CmdUtil.executeCmdCommand("echo %PATH%");
         for (String path : pathValue.split(";")) {
             for (String keyword : keywords) {
@@ -39,6 +39,7 @@ public class WindowsEnvCommandService {
     }
 
     public void updateMachinePath(String pathValue) throws IOException {
+        // Use REG_EXPAND_SZ so entries like %JAVA_HOME%\bin remain expandable after being written.
         CmdUtil.executeCommand(
                 new String[]{
                         "cmd.exe", "/c", "reg", "add",

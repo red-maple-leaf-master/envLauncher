@@ -6,11 +6,11 @@ import java.io.IOException;
 
 public class MavenEnvService extends AbstractPathEnvService {
 
-    public String getMavenEnvironmentVariables() throws IOException {
-        return windowsEnvCommandService.readPathContaining("maven");
+    public String getConfiguredMavenPath() throws IOException {
+        return windowsEnvCommandService.findPathEntryContaining("maven");
     }
 
-    public void setMavenEnvironmentVariables(String mavenHome, String mavenBinPath) throws Exception {
+    public void configureMavenEnvironment(String mavenHome, String mavenBinPath) throws Exception {
         windowsEnvCommandService.setMachineEnvironmentVariable("MAVEN_HOME", mavenHome);
         windowsEnvCommandService.setUserRegistryEnvironmentVariable("MAVEN_HOME", mavenHome);
         updateMachinePath(mavenBinPath, "maven");
