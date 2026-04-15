@@ -45,6 +45,12 @@ mvn clean package -Pportable-app-image
 The portable bundle is generated under `target/portable/env-launcher/`.
 End users can run `target/portable/env-launcher/env-launcher.exe` directly without installing JDK or JRE.
 
+You can also run the helper script on Windows:
+
+```bat
+package-portable.bat
+```
+
 ## Download Source Config
 Two-level config is supported:
 1. `download-sources.properties` in project root (preferred)

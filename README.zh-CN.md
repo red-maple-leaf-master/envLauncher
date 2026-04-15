@@ -45,6 +45,12 @@ mvn clean package -Pportable-app-image
 生成后的绿色版目录位于 `target/portable/env-launcher/`。
 最终用户无需安装 JDK/JRE，直接运行 `target/portable/env-launcher/env-launcher.exe` 即可。
 
+在 Windows 上也可以直接执行辅助脚本：
+
+```bat
+package-portable.bat
+```
+
 ## 下载源配置
 支持两层配置：
 1. 项目根目录 `download-sources.properties`（推荐）
