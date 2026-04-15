@@ -12,7 +12,8 @@ import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
 import top.oneyi.envLauncher.config.DownloadSourceConfig;
 import top.oneyi.envLauncher.service.EnvInstallerService;
-import top.oneyi.envLauncher.utils.EnvUtil;
+import top.oneyi.envLauncher.service.JdkEnvService;
+import top.oneyi.envLauncher.service.MavenEnvService;
 import top.oneyi.envLauncher.utils.LoggerUtil;
 import top.oneyi.envLauncher.utils.PathUtils;
 
@@ -60,6 +61,8 @@ public class EnvInstallerController {
     private Label flowStepLabel;
 
     private final EnvInstallerService service = new EnvInstallerService();
+    private final JdkEnvService jdkEnvService = new JdkEnvService();
+    private final MavenEnvService mavenEnvService = new MavenEnvService();
 
     private boolean jdkReady;
     private boolean mavenReady;
@@ -94,8 +97,8 @@ public class EnvInstallerController {
         }
 
         try {
-            String jdkEnv = EnvUtil.getJdkEnvironmentVariables();
-            String mavenEnv = EnvUtil.getMavenEnvironmentVariables();
+            String jdkEnv = jdkEnvService.getJdkEnvironmentVariables();
+            String mavenEnv = mavenEnvService.getMavenEnvironmentVariables();
             LoggerUtil.info("Current JDK config: " + jdkEnv);
             LoggerUtil.info("Current Maven config: " + mavenEnv);
             LoggerUtil.info("Download source (JDK): " + DownloadSourceConfig.getJdkBaseUrl());
@@ -369,7 +372,7 @@ public class EnvInstallerController {
         Task<Void> task = new Task<>() {
             @Override
             protected Void call() throws Exception {
-                EnvUtil.setJdkEnvironmentVariables(javaHome, "%JAVA_HOME%\\bin");
+                jdkEnvService.setJdkEnvironmentVariables(javaHome, "%JAVA_HOME%\\bin");
                 return null;
             }
         };

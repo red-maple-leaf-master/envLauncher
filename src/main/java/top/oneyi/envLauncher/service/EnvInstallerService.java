@@ -10,7 +10,6 @@ import top.oneyi.envLauncher.MainApp;
 import top.oneyi.envLauncher.callback.JdkDownloadCallback;
 import top.oneyi.envLauncher.config.DownloadSourceConfig;
 import top.oneyi.envLauncher.controller.DownloadProgressDialogController;
-import top.oneyi.envLauncher.utils.EnvUtil;
 import top.oneyi.envLauncher.utils.LoggerUtil;
 import top.oneyi.envLauncher.utils.PathUtils;
 
@@ -29,6 +28,8 @@ import java.util.function.Consumer;
 public class EnvInstallerService {
 
     private Stage dialogStage;
+    private final MavenEnvService mavenEnvService = new MavenEnvService();
+    private final NodeEnvService nodeEnvService = new NodeEnvService();
 
     public void onSetupNode(String version) {
         onSetupNode(version, PathUtils.getCurrentDrive() + "environment", null);
@@ -69,7 +70,7 @@ public class EnvInstallerService {
 
                     String nodeHome = nodeRoot.getAbsolutePath();
                     LoggerUtil.info("Node home found: " + nodeHome);
-                    EnvUtil.setNodeEnvironmentVariables(nodeHome, "%NODE_HOME%");
+                    nodeEnvService.setNodeEnvironmentVariables(nodeHome, "%NODE_HOME%");
                     return true;
                 } catch (Exception e) {
                     LoggerUtil.info("Node setup failed: " + safeError(e));
@@ -121,7 +122,7 @@ public class EnvInstallerService {
 
                     createMavenRepository(mavenHome);
                     configureMavenSettings(mavenHome);
-                    EnvUtil.setMavenEnvironmentVariables(mavenHome, mavenHome + "\\bin");
+                    mavenEnvService.setMavenEnvironmentVariables(mavenHome, mavenHome + "\\bin");
                     return true;
                 } catch (Exception e) {
                     LoggerUtil.info("Maven setup failed: " + safeError(e));
