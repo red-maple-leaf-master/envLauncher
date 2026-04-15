@@ -3,6 +3,7 @@ module top.oneyi.envLauncher {
     requires javafx.controls;
     requires javafx.fxml;
     requires javafx.graphics;
+    requires java.xml;
 
     requires org.controlsfx.controls;
     requires org.kordamp.bootstrapfx.core;

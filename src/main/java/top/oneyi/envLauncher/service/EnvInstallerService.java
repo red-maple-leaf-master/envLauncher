@@ -14,16 +14,26 @@ import top.oneyi.envLauncher.utils.LoggerUtil;
 import top.oneyi.envLauncher.utils.PathUtils;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.function.Consumer;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
 public class EnvInstallerService {
 
@@ -249,49 +259,111 @@ public class EnvInstallerService {
         }
 
         try {
-            StringBuilder content = new StringBuilder();
-            try (BufferedReader reader = new BufferedReader(new FileReader(settingsFile))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    content.append(line).append(System.lineSeparator());
-                }
-            }
-
-            // Keep the repository inside the installed Maven directory so one-click installs stay self-contained.
-            String localRepoPath = new File(mavenHome, "maven-repository").getAbsolutePath().replace("\\", "\\\\");
-            String updated = content.toString();
-
-            if (!updated.contains("<localRepository>")) {
-                updated = updated.replace("</settings>",
-                        "  <localRepository>" + localRepoPath + "</localRepository>" + System.lineSeparator() + "</settings>");
-            }
-
-            String aliyunMirror =
-                    "    <mirror>" + System.lineSeparator() +
-                    "      <id>aliyunmaven</id>" + System.lineSeparator() +
-                    "      <mirrorOf>*</mirrorOf>" + System.lineSeparator() +
-                    "      <name>aliyun maven</name>" + System.lineSeparator() +
-                    "      <url>https://maven.aliyun.com/repository/public</url>" + System.lineSeparator() +
-                    "    </mirror>" + System.lineSeparator();
-
-            // Only inject the mirror once to avoid rewriting user-customized settings on repeated installs.
-            if (!updated.contains("<id>aliyunmaven</id>")) {
-                if (updated.contains("<mirrors>")) {
-                    updated = updated.replace("</mirrors>", aliyunMirror + "  </mirrors>");
-                } else {
-                    String mirrorsBlock = "  <mirrors>" + System.lineSeparator() + aliyunMirror + "  </mirrors>" + System.lineSeparator();
-                    updated = updated.replace("</settings>", mirrorsBlock + "</settings>");
-                }
-            }
-
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(settingsFile))) {
-                writer.write(updated);
-            }
-
+            String original = Files.readString(settingsFile.toPath(), StandardCharsets.UTF_8);
+            String updated = updateMavenSettingsContent(original, mavenHome);
+            Files.writeString(settingsFile.toPath(), updated, StandardCharsets.UTF_8);
+            String localRepoPath = new File(mavenHome, "maven-repository").getAbsolutePath();
             LoggerUtil.info("Maven settings updated. Local repo: " + localRepoPath);
-        } catch (IOException e) {
+        } catch (Exception e) {
             LoggerUtil.info("Update settings.xml failed: " + safeError(e));
         }
+    }
+
+    static String updateMavenSettingsContent(String originalContent, String mavenHome) throws Exception {
+        String localRepoPath = new File(mavenHome, "maven-repository").getAbsolutePath();
+        Document document = parseXml(originalContent);
+        Element settings = document.getDocumentElement();
+
+        upsertLocalRepository(document, settings, localRepoPath);
+        ensureAliyunMirror(document, settings);
+
+        return toXml(document);
+    }
+
+    private static Document parseXml(String content) throws Exception {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setIgnoringComments(false);
+        factory.setNamespaceAware(false);
+        return factory.newDocumentBuilder().parse(new InputSource(new StringReader(content)));
+    }
+
+    private static void upsertLocalRepository(Document document, Element settings, String localRepoPath) {
+        NodeList repositoryNodes = settings.getElementsByTagName("localRepository");
+        if (repositoryNodes.getLength() > 0) {
+            repositoryNodes.item(0).setTextContent(localRepoPath);
+            return;
+        }
+
+        Element localRepository = document.createElement("localRepository");
+        localRepository.setTextContent(localRepoPath);
+        settings.appendChild(localRepository);
+    }
+
+    private static void ensureAliyunMirror(Document document, Element settings) {
+        Element mirrors = findOrCreateChild(document, settings, "mirrors");
+        removeMirrorById(mirrors, "maven-default-http-blocker");
+        if (containsMirrorId(mirrors, "aliyunmaven")) {
+            return;
+        }
+
+        Element mirror = document.createElement("mirror");
+        appendChildWithText(document, mirror, "id", "aliyunmaven");
+        appendChildWithText(document, mirror, "mirrorOf", "*");
+        appendChildWithText(document, mirror, "name", "aliyun maven");
+        appendChildWithText(document, mirror, "url", "https://maven.aliyun.com/repository/public");
+        mirrors.appendChild(mirror);
+    }
+
+    private static void removeMirrorById(Element mirrors, String mirrorId) {
+        NodeList mirrorNodes = mirrors.getElementsByTagName("mirror");
+        for (int i = mirrorNodes.getLength() - 1; i >= 0; i--) {
+            Element mirror = (Element) mirrorNodes.item(i);
+            NodeList idNodes = mirror.getElementsByTagName("id");
+            if (idNodes.getLength() > 0 && mirrorId.equals(idNodes.item(0).getTextContent().trim())) {
+                mirrors.removeChild(mirror);
+            }
+        }
+    }
+
+    private static Element findOrCreateChild(Document document, Element parent, String tagName) {
+        NodeList nodes = parent.getElementsByTagName(tagName);
+        if (nodes.getLength() > 0) {
+            return (Element) nodes.item(0);
+        }
+
+        Element child = document.createElement(tagName);
+        parent.appendChild(child);
+        return child;
+    }
+
+    private static boolean containsMirrorId(Element mirrors, String mirrorId) {
+        NodeList mirrorNodes = mirrors.getElementsByTagName("mirror");
+        for (int i = 0; i < mirrorNodes.getLength(); i++) {
+            Element mirror = (Element) mirrorNodes.item(i);
+            NodeList idNodes = mirror.getElementsByTagName("id");
+            if (idNodes.getLength() > 0 && mirrorId.equals(idNodes.item(0).getTextContent().trim())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static void appendChildWithText(Document document, Element parent, String tagName, String value) {
+        Element child = document.createElement(tagName);
+        child.setTextContent(value);
+        parent.appendChild(child);
+    }
+
+    private static String toXml(Document document) throws Exception {
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        Transformer transformer = transformerFactory.newTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+
+        StringWriter writer = new StringWriter();
+        transformer.transform(new DOMSource(document), new StreamResult(writer));
+        return writer.toString();
     }
 
     private boolean downloadFileWithProgress(String url,
