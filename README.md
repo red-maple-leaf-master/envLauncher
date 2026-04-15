@@ -1,23 +1,63 @@
 # env-launcher
 
-## 技术列表
-* javafx
-* maven
-* jdk17
+Language: English | [简体中文](README.zh-CN.md)
 
-使用jpackage打包,将jre运行环境也都打包到 exe 中,方便没有安装 Java环境的电脑运行
+## Overview
+`env-launcher` is a Windows-oriented JavaFX desktop tool for fast setup of common dev runtimes: JDK, Maven, and Node.
 
-## 如何打包
-在idea的 maven 插件框中找到javafx:jink进行打包 
-然后通过run.bat进行打包成exe 或者在当前项目根目录的cmd窗口中 运行
-```shell
-jpackage --name envLauncher --type app-image -m top.oneyi.jdktool/top.oneyi.jdktool.MainApp --runtime-image .\target\app\
+It turns the full workflow into one visible flow:
+- download
+- unzip
+- environment variable setup
+- validation
+
+## Core Features
+- One-click flow: JDK -> Maven -> Node -> env setup
+- Manual flow: run each setup step independently
+- Download source management: view/edit/save sources in UI
+- Observable progress: progress and logs for each task
+
+## Tech Stack
+- Java 17
+- JavaFX 17
+- Maven
+
+## Project Structure
+- `src/main/java`: application code
+- `src/main/resources/top/oneyi/envLauncher`: FXML and styles
+- `download-sources.properties`: local override config in project root (highest priority)
+
+## Quick Start
+### Requirements
+- JDK 17
+- Maven 3.8+
+
+### Run
+```bash
+mvn clean javafx:run
 ```
-**参数说明**
-```shell
---name 输出的exe文件名
---type app-image 输出的类型
---runtime-image 运行时环境
+
+### Package
+```bash
+mvn clean package
 ```
-**注意**
-> 需要将电脑的环境切换成jdk17 不然打包会报错 切换jdk的时候切记要重启idea
+
+## Download Source Config
+Two-level config is supported:
+1. `download-sources.properties` in project root (preferred)
+2. `src/main/resources/download-sources.properties` (default)
+
+Key properties:
+```properties
+# Preferred JDK mode: dynamic template
+jdk.url-template=https://api.adoptium.net/v3/binary/latest/{version}/ga/windows/x64/jdk/hotspot/normal/eclipse
+
+# Fallback base URLs
+jdk.base-url=https://mirrors.tuna.tsinghua.edu.cn/Adoptium/
+maven.base-url=https://archive.apache.org/dist/maven/maven-3/
+node.base-url=https://npmmirror.com/mirrors/node/
+```
+
+## Notes
+- Run as administrator when setting system environment variables.
+- Restart terminal/IDE after env variable updates.

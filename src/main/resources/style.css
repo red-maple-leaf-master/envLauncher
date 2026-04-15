@@ -1,38 +1,130 @@
-.root {
-    -fx-background-color: #f5f5f5;
+.app-scroll,
+.app-scroll > .viewport {
+    -fx-background-color: transparent;
 }
 
-.label {
-    -fx-font-size: 16px;
-    -fx-text-fill: #333;
+.app-root {
+    -fx-background-color: linear-gradient(to bottom, #f4f8ff 0%, #eef4f2 100%);
+    -fx-font-family: "Segoe UI", "Microsoft YaHei";
 }
 
-.button {
-    -fx-font-size: 12px;
-    -fx-padding: 10px 20px;
-    -fx-background-color: #0078d7;
-    -fx-text-fill: white;
-    -fx-border-radius: 4px;
-    -fx-background-radius: 4px;
+.hero-panel {
+    -fx-padding: 14 16 14 16;
+    -fx-background-color: linear-gradient(to right, #12324f 0%, #1e5a89 100%);
+    -fx-background-radius: 14;
+    -fx-effect: dropshadow(gaussian, rgba(18, 50, 79, 0.25), 14, 0.2, 0, 4);
 }
 
-.text-about {
-    -fx-font-size: 12px;
+.hero-title {
+    -fx-font-size: 28px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #ffffff;
 }
 
-.button:hover {
-    -fx-background-color: #005fa3;
-}
-
-.text-field {
-    -fx-font-size: 14px;
-    -fx-padding: 5px 10px;
-}
-
-.text-area {
-    -fx-font-family: "Consolas", "Courier New", monospace;
+.hero-subtitle {
     -fx-font-size: 13px;
-    -fx-text-fill: #006600;
-    -fx-background-color: #e9ffe9;
-    -fx-border-color: #cccccc;
+    -fx-text-fill: rgba(255, 255, 255, 0.85);
+}
+
+.card-panel,
+.log-panel {
+    -fx-padding: 12 14 14 14;
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: #d7e2ea;
+    -fx-border-width: 1;
+}
+
+.section-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #26455f;
+}
+
+.action-flow {
+    -fx-alignment: CENTER_LEFT;
+}
+
+.path-field,
+.env-combo,
+.env-combo .list-cell,
+.env-combo .text-field {
+    -fx-font-size: 13px;
+}
+
+.path-field {
+    -fx-background-color: #f8fbff;
+    -fx-border-color: #c8d5e3;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 0 10 0 10;
+}
+
+.path-field:focused {
+    -fx-border-color: #2e6fa3;
+}
+
+.env-combo {
+    -fx-background-color: #f8fbff;
+    -fx-border-color: #c8d5e3;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.env-combo:focused {
+    -fx-border-color: #2e6fa3;
+}
+
+.action-button {
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-padding: 0 14 0 14;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+}
+
+.action-button.primary {
+    -fx-background-color: #1e74b7;
+    -fx-text-fill: #ffffff;
+}
+
+.action-button.primary:hover {
+    -fx-background-color: #175f95;
+}
+
+.action-button.secondary {
+    -fx-background-color: #0f5069;
+    -fx-text-fill: #ffffff;
+}
+
+.action-button.secondary:hover {
+    -fx-background-color: #0a3f54;
+}
+
+.action-button.neutral {
+    -fx-background-color: #e8eef4;
+    -fx-text-fill: #254258;
+}
+
+.action-button.neutral:hover {
+    -fx-background-color: #d8e3ee;
+}
+
+.log-area {
+    -fx-font-family: "Consolas", "JetBrains Mono", monospace;
+    -fx-font-size: 12px;
+    -fx-text-fill: #1d5d2f;
+}
+
+.log-area .content {
+    -fx-background-color: #f6fbf6;
+    -fx-background-radius: 10;
+    -fx-border-color: #d2e6d2;
+    -fx-border-radius: 10;
+}
+
+.log-area:focused .content {
+    -fx-border-color: #7aa67a;
 }
