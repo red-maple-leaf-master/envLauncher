@@ -1,51 +1,94 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.control.TextArea?>
 <?import javafx.geometry.Insets?>
-
-
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
-<VBox spacing="15" xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml" fx:controller="top.oneyi.envLauncher.controller.EnvInstallerController">
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 
-    <!-- 设置 padding -->
-    <padding>
-        <Insets top="10" right="10" bottom="10" left="10"/>
-    </padding>
+<ScrollPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="top.oneyi.envLauncher.controller.EnvInstallerController"
+            fitToWidth="true"
+            hbarPolicy="NEVER"
+            styleClass="app-scroll">
 
-    <!-- 标题 -->
-    <Label text="web开发环境配置" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+    <content>
+        <VBox spacing="14" styleClass="app-root" fillWidth="true">
+            <padding>
+                <Insets top="16" right="16" bottom="16" left="16"/>
+            </padding>
 
-    <!-- JDK路径选择 -->
-    <HBox spacing="10">
-        <TextField fx:id="jdkPathField" editable="false" prefWidth="420" prefHeight="35" styleClass="text-field"/>
-        <Button text="📁 选择 JDK 目录" onAction="#onChooseJdkDir" prefHeight="35" styleClass="button"/>
-    </HBox>
+            <VBox spacing="6" styleClass="hero-panel">
+                <Label text="Web Dev Environment Setup" styleClass="hero-title"/>
+                <Label text="Choose versions, download components, and apply env settings" styleClass="hero-subtitle"/>
+                <Label fx:id="flowStepLabel" text="Step 1/4: Select JDK directory" styleClass="hero-subtitle"/>
+            </VBox>
 
-    <HBox spacing="10">
-        <!--  JDK下载  -->
-        <ComboBox fx:id="jdkVersionCombo" prefWidth="100" prefHeight="15" styleClass="text-field"/>
-        <Button text="📥 下载 JDK" onAction="#onDownloadJdk" prefHeight="35" styleClass="button"/>
-        <!--  maven 下载  -->
-        <ComboBox fx:id="mavenVersionCombo" prefWidth="180" prefHeight="15" styleClass="text-field"/>
-        <Button text="🔧 一键设置 Maven" onAction="#onSetupMaven" prefHeight="35" styleClass="button"/>
-    </HBox>
+            <VBox spacing="12" styleClass="card-panel">
+                <Label text="JDK Path" styleClass="section-title"/>
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <TextField fx:id="jdkPathField" editable="false" prefHeight="38" styleClass="path-field" HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="chooseJdkButton" text="Select JDK Dir" onAction="#onChooseJdkDir" prefHeight="38" styleClass="action-button secondary"/>
+                </HBox>
+            </VBox>
 
-    <!-- 操作按钮 -->
-    <HBox spacing="10">
-        <!-- 新增 Node 一键配置按钮 -->
-        <ComboBox fx:id="nodeVersionCombo" prefWidth="120" prefHeight="15" styleClass="text-field"/>
-        <Button text="🔧 一键配置 Node" onAction="#onSetupNode" prefHeight="35" styleClass="button"/>
-        <Button text="⚙ 设置Jdk环境变量" onAction="#onSetEnvironmentVariables" prefHeight="35" styleClass="button"/>
-        <Button text="🔍 查看当前配置" onAction="#onShowCurrentConfig" prefHeight="35" styleClass="button"/>
-    </HBox>
+            <VBox spacing="10" styleClass="card-panel">
+                <Label text="Component Install" styleClass="section-title"/>
+                <FlowPane hgap="10" vgap="10" styleClass="action-flow" prefWrapLength="760">
+                    <ComboBox fx:id="jdkVersionCombo" prefWidth="110" prefHeight="36" styleClass="env-combo"/>
+                    <Button fx:id="downloadJdkButton" text="Download JDK" onAction="#onDownloadJdk" prefHeight="36" styleClass="action-button primary"/>
+                    <ComboBox fx:id="mavenVersionCombo" prefWidth="170" prefHeight="36" styleClass="env-combo"/>
+                    <Button fx:id="setupMavenButton" text="Setup Maven" onAction="#onSetupMaven" prefHeight="36" styleClass="action-button primary"/>
+                </FlowPane>
+            </VBox>
 
-    <!-- 输出日志区域 -->
-    <TextArea fx:id="outputArea" editable="false" wrapText="true" prefHeight="350" styleClass="text-area"
-              promptText="日志输出区"/>
-</VBox>
+            <VBox spacing="10" styleClass="card-panel">
+                <Label text="Environment" styleClass="section-title"/>
+                <FlowPane hgap="10" vgap="10" styleClass="action-flow" prefWrapLength="760">
+                    <ComboBox fx:id="nodeVersionCombo" prefWidth="120" prefHeight="36" styleClass="env-combo"/>
+                    <Button fx:id="setupNodeButton" text="Setup Node" onAction="#onSetupNode" prefHeight="36" styleClass="action-button primary"/>
+                    <Button fx:id="setEnvButton" text="Set JDK Env" onAction="#onSetEnvironmentVariables" prefHeight="36" styleClass="action-button secondary"/>
+                    <Button fx:id="showConfigButton" text="Show Config" onAction="#onShowCurrentConfig" prefHeight="36" styleClass="action-button neutral"/>
+                    <Button fx:id="oneClickInstallButton" text="One Click Install" onAction="#onOneClickInstall" prefHeight="36" styleClass="action-button primary"/>
+                </FlowPane>
+            </VBox>
+
+            <VBox spacing="10" styleClass="card-panel">
+                <Label text="Download Source" styleClass="section-title"/>
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="JDK" minWidth="52"/>
+                    <TextField fx:id="jdkSourceField" prefHeight="34" styleClass="path-field" HBox.hgrow="ALWAYS"/>
+                </HBox>
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="Maven" minWidth="52"/>
+                    <TextField fx:id="mavenSourceField" prefHeight="34" styleClass="path-field" HBox.hgrow="ALWAYS"/>
+                </HBox>
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="Node" minWidth="52"/>
+                    <TextField fx:id="nodeSourceField" prefHeight="34" styleClass="path-field" HBox.hgrow="ALWAYS"/>
+                </HBox>
+                <FlowPane hgap="10" vgap="10" styleClass="action-flow" prefWrapLength="760">
+                    <Button fx:id="reloadSourcesButton" text="Reload Sources" onAction="#onReloadDownloadSources" prefHeight="34" styleClass="action-button neutral"/>
+                    <Button fx:id="saveSourcesButton" text="Save Sources" onAction="#onSaveDownloadSources" prefHeight="34" styleClass="action-button secondary"/>
+                </FlowPane>
+            </VBox>
+
+            <VBox spacing="8" styleClass="log-panel" VBox.vgrow="ALWAYS">
+                <Label text="Logs" styleClass="section-title"/>
+                <TextArea fx:id="outputArea"
+                          editable="false"
+                          wrapText="true"
+                          prefHeight="280"
+                          styleClass="log-area"
+                          promptText="Execution logs will appear here"
+                          VBox.vgrow="ALWAYS"/>
+            </VBox>
+        </VBox>
+    </content>
+</ScrollPane>

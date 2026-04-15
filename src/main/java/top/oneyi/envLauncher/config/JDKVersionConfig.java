@@ -16,7 +16,14 @@ public class JDKVersionConfig {
         VERSION_MAP.put("21", "21/jdk/x64/windows/OpenJDK21U-jdk_x64_windows_hotspot_21.0.7_6.zip");
     }
 
-    public static String getUrl(String version) {
+    public static String getArtifactPath(String version) {
         return VERSION_MAP.get(version);
+    }
+
+    /**
+     * Keep backward compatibility for old callers.
+     */
+    public static String getUrl(String version) {
+        return getArtifactPath(version);
     }
 }

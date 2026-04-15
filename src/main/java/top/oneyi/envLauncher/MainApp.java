@@ -13,16 +13,19 @@ import java.util.Objects;
 public class MainApp extends Application {
     @Override
     public void start(Stage stage) throws IOException {
-
         URL resource = MainApp.class.getResource("jdk-installer.fxml");
         FXMLLoader fxmlLoader = new FXMLLoader(resource);
-        Scene scene = new Scene(fxmlLoader.load(), 600, 480);
+        Scene scene = new Scene(fxmlLoader.load(), 860, 620);
+
         String iconPath = getClass().getResource("/icons/env-launcher.png").toExternalForm();
         stage.getIcons().add(new Image(iconPath));
         scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/style.css")).toExternalForm());
+
         stage.setTitle("envLauncher");
         stage.setScene(scene);
-        stage.setResizable(false);
+        stage.setMinWidth(680);
+        stage.setMinHeight(520);
+        stage.setResizable(true);
         stage.show();
     }
 

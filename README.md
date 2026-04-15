@@ -1,37 +1,63 @@
-# 项目介绍 - env-launcher
+# env-launcher
 
-## 概述
-`env-launcher` 是一个基于 JavaFX 开发的桌面应用程序，旨在为没有安装 Java 运行环境的用户提供便捷的运行体验。通过使用 `jpackage` 工具，该项目可以将应用及其所需的 JRE 打包成一个独立的可执行文件（如 [.exe](file://E:\Desktop\W\TestJava\env-launcher\target\app\bin\java.exe) 文件），用户无需额外安装 Java 环境即可直接运行。
+Language: English | [简体中文](README.zh-CN.md)
 
-## 技术栈
-- **JavaFX**：用于构建图形用户界面（GUI）。
-- **Maven**：作为项目的构建工具，管理依赖和构建流程。
-- **JDK 17**：使用 JDK 17 进行开发和打包，确保兼容性和稳定性。
+## Overview
+`env-launcher` is a Windows-oriented JavaFX desktop tool for fast setup of common dev runtimes: JDK, Maven, and Node.
 
-## 核心功能
-- **一键打包**：通过 Maven 插件（如 `javafx:jink`）进行打包，并结合 `jpackage` 将应用与 JRE 一起打包成 [.exe](file://E:\Desktop\W\TestJava\env-launcher\target\app\bin\java.exe) 文件。
-- **免安装运行**：生成的可执行文件包含了完整的运行时环境，用户无需手动安装 Java 环境即可运行程序。
-- **注册表支持**：打包后的 [.exe](file://E:\Desktop\W\TestJava\env-launcher\target\app\bin\java.exe) 文件需要以管理员身份运行，以便正确地设置系统 PATH 环境变量并通过注册表进行相关配置。
+It turns the full workflow into one visible flow:
+- download
+- unzip
+- environment variable setup
+- validation
 
-## 打包说明
-### 使用命令行打包
-在项目根目录下打开命令行窗口，执行以下命令：
-```shell
-jpackage --name envLauncher --type app-image -m top.oneyi.jdktool/top.oneyi.jdktool.MainApp --runtime-image .\target\app\
+## Core Features
+- One-click flow: JDK -> Maven -> Node -> env setup
+- Manual flow: run each setup step independently
+- Download source management: view/edit/save sources in UI
+- Observable progress: progress and logs for each task
+
+## Tech Stack
+- Java 17
+- JavaFX 17
+- Maven
+
+## Project Structure
+- `src/main/java`: application code
+- `src/main/resources/top/oneyi/envLauncher`: FXML and styles
+- `download-sources.properties`: local override config in project root (highest priority)
+
+## Quick Start
+### Requirements
+- JDK 17
+- Maven 3.8+
+
+### Run
+```bash
+mvn clean javafx:run
 ```
 
+### Package
+```bash
+mvn clean package
+```
 
-#### 参数说明
-- `--name`：指定输出的 [.exe](file://E:\Desktop\W\TestJava\env-launcher\target\app\bin\java.exe) 文件名。
-- `--type app-image`：指定输出类型为应用程序镜像。
-- `--runtime-image`：指定包含 JRE 的运行时环境路径。
+## Download Source Config
+Two-level config is supported:
+1. `download-sources.properties` in project root (preferred)
+2. `src/main/resources/download-sources.properties` (default)
 
-### 注意事项
-- **JDK 版本**：请确保使用 JDK 17 进行打包，否则可能会出现错误。切换 JDK 版本后，请重启 IDE（如 IntelliJ IDEA）。
-- **管理员权限**：打包生成的 [.exe](file://E:\Desktop\W\TestJava\env-launcher\target\app\bin\java.exe) 文件需要以管理员身份运行，因为某些操作（如修改注册表和设置 PATH）需要管理员权限。
+Key properties:
+```properties
+# Preferred JDK mode: dynamic template
+jdk.url-template=https://api.adoptium.net/v3/binary/latest/{version}/ga/windows/x64/jdk/hotspot/normal/eclipse
 
-## 适用场景
-- 需要将 Java 应用程序分发给没有安装 Java 环境的用户。
-- 希望提供一个简单、独立的可执行文件，简化用户的安装和使用流程。
+# Fallback base URLs
+jdk.base-url=https://mirrors.tuna.tsinghua.edu.cn/Adoptium/
+maven.base-url=https://archive.apache.org/dist/maven/maven-3/
+node.base-url=https://npmmirror.com/mirrors/node/
+```
 
-这个项目非常适合那些希望快速将 Java 应用部署到目标机器上的开发者，特别是针对非技术用户或企业内部使用的场景。
+## Notes
+- Run as administrator when setting system environment variables.
+- Restart terminal/IDE after env variable updates.
