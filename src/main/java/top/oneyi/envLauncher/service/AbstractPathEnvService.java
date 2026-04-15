@@ -1,5 +1,6 @@
 package top.oneyi.envLauncher.service;
 
+import top.oneyi.envLauncher.utils.LoggerUtil;
 import top.oneyi.envLauncher.utils.PathUtils;
 
 import java.io.IOException;
@@ -20,6 +21,12 @@ public abstract class AbstractPathEnvService {
         }
 
         cachedPath = PathUtils.filterAndInsertPath(pathEntry, cachedPath, excludeKeywords);
-        windowsEnvCommandService.updateMachinePath(cachedPath);
+        try {
+            windowsEnvCommandService.updateMachinePath(cachedPath);
+        } catch (IOException e) {
+            // Fall back to the current user when the app is not running with machine-level registry privileges.
+            LoggerUtil.info("Machine PATH update failed, fallback to user PATH: " + e.getMessage());
+            windowsEnvCommandService.updateUserPath(cachedPath);
+        }
     }
 }

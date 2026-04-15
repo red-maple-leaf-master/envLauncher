@@ -49,4 +49,15 @@ public class WindowsEnvCommandService {
                 Charset.forName("GBK")
         );
     }
+
+    public void updateUserPath(String pathValue) throws IOException {
+        CmdUtil.executeCommand(
+                new String[]{
+                        "cmd.exe", "/c", "reg", "add",
+                        "HKCU\\Environment",
+                        "/v", "Path", "/t", "REG_EXPAND_SZ", "/d", "\"" + pathValue + "\"", "/f"
+                },
+                Charset.forName("GBK")
+        );
+    }
 }

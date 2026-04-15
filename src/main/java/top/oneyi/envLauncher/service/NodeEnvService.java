@@ -17,8 +17,7 @@ public class NodeEnvService extends AbstractPathEnvService {
             new File(cachePath).mkdirs();
         }
 
-        windowsEnvCommandService.setMachineEnvironmentVariable("NODE_HOME", nodeHome);
-        windowsEnvCommandService.setUserRegistryEnvironmentVariable("NODE_HOME", nodeHome);
+        updateEnvironmentVariable("NODE_HOME", nodeHome);
 
         // Add the executable path first so npm/cnpm commands resolve against the installed Node version.
         updateMachinePath(nodePathEntry);
@@ -52,5 +51,14 @@ public class NodeEnvService extends AbstractPathEnvService {
             LoggerUtil.info("Node NPM config failed: " + e.getMessage());
             throw new IOException("Failed to configure npm.", e);
         }
+    }
+
+    private void updateEnvironmentVariable(String variableName, String variableValue) throws Exception {
+        try {
+            windowsEnvCommandService.setMachineEnvironmentVariable(variableName, variableValue);
+        } catch (IOException e) {
+            LoggerUtil.info("Machine " + variableName + " update failed, fallback to user scope: " + e.getMessage());
+        }
+        windowsEnvCommandService.setUserRegistryEnvironmentVariable(variableName, variableValue);
     }
 }

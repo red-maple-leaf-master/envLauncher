@@ -11,9 +11,17 @@ public class MavenEnvService extends AbstractPathEnvService {
     }
 
     public void configureMavenEnvironment(String mavenHome, String mavenBinPath) throws Exception {
-        windowsEnvCommandService.setMachineEnvironmentVariable("MAVEN_HOME", mavenHome);
-        windowsEnvCommandService.setUserRegistryEnvironmentVariable("MAVEN_HOME", mavenHome);
+        updateEnvironmentVariable("MAVEN_HOME", mavenHome);
         updateMachinePath(mavenBinPath, "maven");
         LoggerUtil.info("[MAVEN_HOME] related environment variables updated. Restart terminal or IDE to apply changes.");
+    }
+
+    private void updateEnvironmentVariable(String variableName, String variableValue) throws Exception {
+        try {
+            windowsEnvCommandService.setMachineEnvironmentVariable(variableName, variableValue);
+        } catch (IOException e) {
+            LoggerUtil.info("Machine " + variableName + " update failed, fallback to user scope: " + e.getMessage());
+        }
+        windowsEnvCommandService.setUserRegistryEnvironmentVariable(variableName, variableValue);
     }
 }

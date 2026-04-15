@@ -19,7 +19,17 @@ public class CmdUtil {
      */
     public static String executeCommand(String[] command, Charset charset) throws IOException {
         Process process = Runtime.getRuntime().exec(command);
-        return readProcessOutput(process, charset);
+        String output = readProcessOutput(process, charset);
+        try {
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                throw new IOException("Command exited with code " + exitCode + ": " + output.trim());
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Command execution interrupted.", e);
+        }
+        return output;
     }
 
     private static String readProcessOutput(Process process, Charset charset) throws IOException {
