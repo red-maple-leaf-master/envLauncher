@@ -3,6 +3,7 @@ package top.oneyi.envLauncher.service;
 import top.oneyi.envLauncher.utils.CmdUtil;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 
 /**
  * Centralizes Windows environment mutation commands so component services do not
@@ -11,7 +12,15 @@ import java.io.IOException;
 public class WindowsEnvCommandService {
 
     public String readPathContaining(String... keywords) throws IOException {
-        return CmdUtil.getPathFromEnvironment(keywords);
+        String pathValue = CmdUtil.executeCmdCommand("echo %PATH%");
+        for (String path : pathValue.split(";")) {
+            for (String keyword : keywords) {
+                if (path.toLowerCase().contains(keyword.toLowerCase())) {
+                    return path;
+                }
+            }
+        }
+        return null;
     }
 
     public String setMachineEnvironmentVariable(String variableName, String variableValue) throws IOException {
@@ -23,10 +32,20 @@ public class WindowsEnvCommandService {
     }
 
     public void setUserRegistryEnvironmentVariable(String variableName, String variableValue) throws Exception {
-        CmdUtil.setHomeInWindows(variableValue, variableName);
+        CmdUtil.executeCommand(
+                new String[]{"reg", "add", "HKCU\\Environment", "/v", variableName, "/d", variableValue, "/f"},
+                Charset.forName("GBK")
+        );
     }
 
     public void updateMachinePath(String pathValue) throws IOException {
-        CmdUtil.regAddPath(pathValue);
+        CmdUtil.executeCommand(
+                new String[]{
+                        "cmd.exe", "/c", "reg", "add",
+                        "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment",
+                        "/v", "Path", "/t", "REG_EXPAND_SZ", "/d", "\"" + pathValue + "\"", "/f"
+                },
+                Charset.forName("GBK")
+        );
     }
 }
