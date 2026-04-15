@@ -1,15 +1,11 @@
 package top.oneyi.envLauncher.service;
 
 import top.oneyi.envLauncher.utils.LoggerUtil;
-import top.oneyi.envLauncher.utils.PathUtils;
 
 import java.io.File;
 import java.io.IOException;
 
-public class NodeEnvService {
-
-    private final WindowsEnvCommandService windowsEnvCommandService = new WindowsEnvCommandService();
-    private String globalPath;
+public class NodeEnvService extends AbstractPathEnvService {
 
     public void setNodeEnvironmentVariables(String nodePath, String nodeHome) throws Exception {
         String globalInstallPath = nodePath + "\\node_global";
@@ -24,9 +20,9 @@ public class NodeEnvService {
         windowsEnvCommandService.setMachineEnvironmentVariable("NODE_HOME", nodePath);
         windowsEnvCommandService.setUserRegistryEnvironmentVariable("NODE_HOME", nodePath);
 
-        setPath(nodeHome);
-        setPath(globalInstallPath);
-        setPath(cachePath);
+        updateMachinePath(nodeHome);
+        updateMachinePath(globalInstallPath);
+        updateMachinePath(cachePath);
         setNpmConfig(cachePath, globalInstallPath);
 
         LoggerUtil.info("Node related environment variables updated. Restart terminal or IDE to apply changes.");
@@ -51,18 +47,9 @@ public class NodeEnvService {
             windowsEnvCommandService.executeCommand("npm install cnpm@7.1.1 -g");
             LoggerUtil.info("NPM cnpm install completed.");
         } catch (Exception e) {
-            System.err.println("Node NPM config failed: " + e.getMessage());
-            e.printStackTrace();
+            // Keep failures visible in the unified log because npm config runs after PATH changes.
+            LoggerUtil.info("Node NPM config failed: " + e.getMessage());
+            throw new IOException("Failed to configure npm.", e);
         }
-    }
-
-    private void setPath(String pathHome, String... excludeKeywords) throws IOException {
-        // Keep using the current process PATH as the merge base to preserve the previous behavior.
-        if (globalPath == null) {
-            globalPath = System.getenv("PATH");
-        }
-
-        globalPath = PathUtils.filterAndInsertPath(pathHome, globalPath, excludeKeywords);
-        windowsEnvCommandService.updateMachinePath(globalPath);
     }
 }
