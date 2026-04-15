@@ -13,7 +13,7 @@ import java.util.Objects;
 public class MainApp extends Application {
     @Override
     public void start(Stage stage) throws IOException {
-        URL resource = MainApp.class.getResource("jdk-installer.fxml");
+        URL resource = MainApp.class.getResource("env-installer.fxml");
         FXMLLoader fxmlLoader = new FXMLLoader(resource);
         Scene scene = new Scene(fxmlLoader.load(), 860, 620);
 
