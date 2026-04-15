@@ -28,19 +28,22 @@ It turns the full workflow into one visible flow:
 - `download-sources.properties`: local override config in project root (highest priority)
 
 ## Quick Start
-### Requirements
+### Development Requirements
 - JDK 17
 - Maven 3.8+
 
-### Run
+### Run in Development
 ```bash
 mvn clean javafx:run
 ```
 
-### Package
+### Build Portable Windows Bundle
 ```bash
-mvn clean package
+mvn clean package -Pportable-app-image
 ```
+
+The portable bundle is generated under `target/portable/env-launcher/`.
+End users can run `target/portable/env-launcher/env-launcher.exe` directly without installing JDK or JRE.
 
 ## Download Source Config
 Two-level config is supported:

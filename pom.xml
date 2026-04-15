@@ -69,9 +69,9 @@
                         <configuration>
                             <mainClass>top.oneyi.envLauncher.MainApp</mainClass>
                             <winLauncherType>gui</winLauncherType> <!-- 关键配置 -->
-                            <launcher>app</launcher>
-                            <jlinkZipName>app</jlinkZipName>
-                            <jlinkImageName>app</jlinkImageName>
+                            <launcher>env-launcher</launcher>
+                            <jlinkZipName>env-launcher</jlinkZipName>
+                            <jlinkImageName>env-launcher</jlinkImageName>
                             <noManPages>true</noManPages>
                             <stripDebug>true</stripDebug>
                             <noHeaderFiles>true</noHeaderFiles>
@@ -81,4 +81,53 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>portable-app-image</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <version>3.6.1</version>
+                        <executions>
+                            <execution>
+                                <id>copy-jpackage-dependencies</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>copy-dependencies</goal>
+                                </goals>
+                                <configuration>
+                                    <includeScope>runtime</includeScope>
+                                    <outputDirectory>${project.build.directory}/jpackage-modules</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>build-portable-app-image</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>powershell</executable>
+                                    <arguments>
+                                        <argument>-Command</argument>
+                                        <argument>&amp; '${java.home}/bin/jpackage.exe' --type app-image --dest '${project.build.directory}/portable' --name 'env-launcher' --icon '${project.basedir}/src/main/resources/icons/favicon.ico' --module-path '${project.build.directory}/jpackage-modules;${project.build.directory}/${project.build.finalName}.jar' --module 'top.oneyi.envLauncher/top.oneyi.envLauncher.MainApp' --app-version '1.0' --vendor 'top.oneyi' --verbose</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
