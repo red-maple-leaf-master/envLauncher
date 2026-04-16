@@ -1,28 +1,30 @@
-﻿# AGENTS
+﻿<!-- OPENSPEC:START -->
+# OpenSpec Instructions
 
-## 目标
-本项目是一个基于 JavaFX 的 Windows 环境安装器（JDK/Maven/Node）。所有改动都应优先保证“可安装、可运行、可回滚”。
+## Goals
+This project is a Windows environment installer (JDK/Maven/Node) based on JavaFX. All changes should prioritize "installable, runnable, and rollback-capable".
 
-## 硬性约束
-1. Java 与构建版本固定为 JDK 17（见 `pom.xml`），不要在未明确要求时升级 Java 或核心依赖版本。
-2. 构建工具固定为 Maven；默认以 `mvn clean compile` 和 `mvn test` 作为基础验证命令。
-3. 模块系统必须保持可用：新增包/控制器后，若涉及 FXML 反射访问，必须同步更新 `src/main/java/module-info.java` 的 `opens`。
-4. FXML、样式和图标路径必须保持资源可解析：`src/main/resources/top/oneyi/envLauncher/` 与 `src/main/resources/icons/` 下资源名不要随意改动。
-5. 这是 Windows 优先项目：涉及环境变量与 PATH 的逻辑应兼容 `setx`/注册表行为，不要引入仅 Linux/macOS 可用命令。
-6. 涉及下载、解压、环境变量写入的长任务必须放在后台线程/`Task` 中，UI 更新必须通过 `Platform.runLater(...)`。
-7. 不要在代码中写死开发机绝对路径；路径拼接统一使用 `PathUtils` 或 `File`/`Path` API。
-8. 未经明确需求，不要修改下载源策略（TUNA、npmmirror、Apache archive）和安装目录约定，避免影响现有用户环境。
-9. 注释要求：新增或修改的关键逻辑必须有简洁注释，说明“为什么这样做”，避免无意义注释。
-10. 日志要求：涉及下载、解压、环境变量、外部命令、异常分支的代码必须记录日志；成功、失败、取消三类状态都要可追踪。
+## Hard Constraints
+1. Java and build version are fixed at JDK 17 (see `pom.xml`). Do not upgrade Java or core dependency versions without explicit requirements.
+2. Build tool is fixed at Maven; use `mvn clean compile` and `mvn test` as basic validation commands by default.
+3. Module system must remain functional: after adding packages/controllers, if FXML reflection access is involved, synchronously update the `opens` directives in `src/main/java/module-info.java`.
+4. FXML, styles, and icon paths must remain resolvable: do not arbitrarily rename resources under `src/main/resources/top/oneyi/envLauncher/` and `src/main/resources/icons/`.
+5. This is a Windows-first project: environment variable and PATH logic should be compatible with `setx`/registry behavior; do not introduce Linux/macOS-only commands.
+6. Long-running tasks involving downloads, extraction, and environment variable writes must run on background threads/`Task`; UI updates must go through `Platform.runLater(...)`.
+7. Do not hardcode development machine absolute paths in code; use `PathUtils` or `File`/`Path` API for path concatenation.
+8. Without explicit requirements, do not modify download source policies (TUNA, npmmirror, Apache archive) and installation directory conventions to avoid impacting existing user environments.
+9. Comment requirements: new or modified key logic must have concise comments explaining "why this is done"; avoid meaningless comments.
+10. Logging requirements: code involving downloads, extraction, environment variables, external commands, and exception branches must log entries; success, failure, and cancellation states must all be traceable.
 
-## 变更边界
-1. 优先做最小改动，避免“大重构+行为变化”同时发生。
-2. 若修改 `EnvUtil`、`CmdUtil`、`EnvInstallerService` 这类系统相关代码，必须补充失败场景处理与日志。
-3. 若新增 UI 交互，需保持窗口最小尺寸与主流程可用，不阻塞主线程。
-4. 任何功能改动若缺少必要注释或关键日志，视为未完成，不可提交。
+## Change Boundaries
+1. Prefer minimal changes; avoid combining "large refactoring + behavioral changes" simultaneously.
+2. When modifying system-related code like `EnvUtil`, `CmdUtil`, or `EnvInstallerService`, add failure scenario handling and logging.
+3. When adding new UI interactions, maintain minimum window size and main workflow usability without blocking the main thread.
+4. Any feature changes lacking necessary comments or critical logging are considered incomplete and cannot be submitted.
 
-## 提交前检查
-1. 编译通过：`mvn clean compile`
-2. 测试通过：`mvn test`
-3. 手工检查至少一条安装链路（JDK/Maven/Node 任一）不破坏现有流程
-4. 提交记录要求是中文,符合提交规范格式要求,并且标明是AI生成
+## Pre-submission Checks
+1. Compilation passes: `mvn clean compile`
+2. Tests pass: `mvn test`
+3. Manually verify at least one installation path (JDK/Maven/Node) does not break existing workflows
+4. Commit messages must be in Chinese, follow the commit specification format, and indicate AI generation
+<!-- OPENSPEC:END -->
