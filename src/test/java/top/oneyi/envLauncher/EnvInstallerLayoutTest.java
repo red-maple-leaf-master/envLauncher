@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 
 public class EnvInstallerLayoutTest {
@@ -18,6 +19,15 @@ public class EnvInstallerLayoutTest {
         assertFalse("hero title should be removed", fxml.contains("Web Dev Environment Setup"));
         assertFalse("one click install button should be removed", fxml.contains("fx:id=\"oneClickInstallButton\""));
         assertFalse("one click install action should be removed", fxml.contains("onAction=\"#onOneClickInstall\""));
+    }
+
+    @Test
+    public void envInstallerLayoutContainsLocalImportButtons() throws IOException {
+        String fxml = readEnvInstallerFxml();
+
+        assertTrue(fxml.contains("fx:id=\"useLocalJdkButton\""));
+        assertTrue(fxml.contains("fx:id=\"useLocalMavenButton\""));
+        assertTrue(fxml.contains("fx:id=\"useLocalNodeButton\""));
     }
 
     private String readEnvInstallerFxml() throws IOException {

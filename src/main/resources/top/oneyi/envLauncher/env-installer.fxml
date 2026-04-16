@@ -37,16 +37,21 @@
                 <FlowPane hgap="10" vgap="10" styleClass="action-flow" prefWrapLength="760">
                     <ComboBox fx:id="jdkVersionCombo" prefWidth="110" prefHeight="36" styleClass="env-combo"/>
                     <Button fx:id="installJdkButton" text="Install JDK" onAction="#onInstallJdk" prefHeight="36" styleClass="action-button primary"/>
+                    <Button fx:id="useLocalJdkButton" text="Use Local JDK" onAction="#onUseLocalJdk" prefHeight="36" styleClass="action-button secondary"/>
                     <ComboBox fx:id="mavenVersionCombo" prefWidth="170" prefHeight="36" styleClass="env-combo"/>
                     <Button fx:id="installMavenButton" text="Install Maven" onAction="#onInstallMaven" prefHeight="36" styleClass="action-button primary"/>
+                    <Button fx:id="useLocalMavenButton" text="Use Local Maven" onAction="#onUseLocalMaven" prefHeight="36" styleClass="action-button secondary"/>
+                </FlowPane>
+                <FlowPane hgap="10" vgap="10" styleClass="action-flow" prefWrapLength="760">
+                    <ComboBox fx:id="nodeVersionCombo" prefWidth="120" prefHeight="36" styleClass="env-combo"/>
+                    <Button fx:id="installNodeButton" text="Install Node" onAction="#onInstallNode" prefHeight="36" styleClass="action-button primary"/>
+                    <Button fx:id="useLocalNodeButton" text="Use Local Node" onAction="#onUseLocalNode" prefHeight="36" styleClass="action-button secondary"/>
                 </FlowPane>
             </VBox>
 
             <VBox spacing="10" styleClass="card-panel">
                 <Label text="Environment" styleClass="section-title"/>
                 <FlowPane hgap="10" vgap="10" styleClass="action-flow" prefWrapLength="760">
-                    <ComboBox fx:id="nodeVersionCombo" prefWidth="120" prefHeight="36" styleClass="env-combo"/>
-                    <Button fx:id="installNodeButton" text="Install Node" onAction="#onInstallNode" prefHeight="36" styleClass="action-button primary"/>
                     <Button fx:id="showConfigButton" text="Show Config" onAction="#onShowCurrentConfig" prefHeight="36" styleClass="action-button neutral"/>
                 </FlowPane>
             </VBox>

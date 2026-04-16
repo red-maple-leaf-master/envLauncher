@@ -14,6 +14,7 @@ import top.oneyi.envLauncher.service.EnvironmentSetupResult;
 import top.oneyi.envLauncher.service.EnvInstallerService;
 import top.oneyi.envLauncher.service.JdkEnvService;
 import top.oneyi.envLauncher.service.MavenEnvService;
+import top.oneyi.envLauncher.service.NodeEnvService;
 import top.oneyi.envLauncher.utils.LoggerUtil;
 import top.oneyi.envLauncher.utils.PathUtils;
 
@@ -22,42 +23,49 @@ import java.io.File;
 public class EnvInstallerController {
 
     @FXML
-    private TextField installDirField;
+    TextField installDirField;
     @FXML
     private TextArea outputArea;
 
     @FXML
-    private ComboBox<String> jdkVersionCombo;
+    ComboBox<String> jdkVersionCombo;
     @FXML
-    private ComboBox<String> mavenVersionCombo;
+    ComboBox<String> mavenVersionCombo;
     @FXML
-    private ComboBox<String> nodeVersionCombo;
+    ComboBox<String> nodeVersionCombo;
 
     @FXML
-    private TextField jdkSourceField;
+    TextField jdkSourceField;
     @FXML
-    private TextField mavenSourceField;
+    TextField mavenSourceField;
     @FXML
-    private TextField nodeSourceField;
+    TextField nodeSourceField;
 
     @FXML
-    private Button chooseInstallDirButton;
+    Button chooseInstallDirButton;
     @FXML
-    private Button installJdkButton;
+    Button installJdkButton;
     @FXML
-    private Button installMavenButton;
+    Button useLocalJdkButton;
     @FXML
-    private Button installNodeButton;
+    Button installMavenButton;
     @FXML
-    private Button showConfigButton;
+    Button useLocalMavenButton;
     @FXML
-    private Button reloadSourcesButton;
+    Button installNodeButton;
     @FXML
-    private Button saveSourcesButton;
+    Button useLocalNodeButton;
+    @FXML
+    Button showConfigButton;
+    @FXML
+    Button reloadSourcesButton;
+    @FXML
+    Button saveSourcesButton;
 
     private final EnvInstallerService service = new EnvInstallerService();
     private final JdkEnvService jdkEnvService = new JdkEnvService();
     private final MavenEnvService mavenEnvService = new MavenEnvService();
+    private final NodeEnvService nodeEnvService = new NodeEnvService();
 
     private boolean busy;
 
@@ -221,6 +229,72 @@ public class EnvInstallerController {
         });
     }
 
+    public void onUseLocalNode() {
+        if (busy) {
+            LoggerUtil.info("Task is running. Please wait.");
+            return;
+        }
+
+        File selectedDir = chooseLocalDirectory("Select local Node directory");
+        if (selectedDir == null) {
+            LoggerUtil.info("Local Node selection cancelled.");
+            return;
+        }
+
+        String nodeHome = resolveLocalNodeHomeForTest(selectedDir);
+        if (nodeHome == null) {
+            LoggerUtil.info("Selected directory is not a valid Node root. Missing node.exe.");
+            return;
+        }
+
+        LoggerUtil.info("Local Node root selected: " + nodeHome);
+        applyNodeEnvironment(nodeHome);
+    }
+
+    public void onUseLocalMaven() {
+        if (busy) {
+            LoggerUtil.info("Task is running. Please wait.");
+            return;
+        }
+
+        File selectedDir = chooseLocalDirectory("Select local Maven directory");
+        if (selectedDir == null) {
+            LoggerUtil.info("Local Maven selection cancelled.");
+            return;
+        }
+
+        String mavenHome = resolveLocalMavenHomeForTest(selectedDir);
+        if (mavenHome == null) {
+            LoggerUtil.info("Selected directory is not a valid Maven root. Missing bin\\mvn.cmd or conf directory.");
+            return;
+        }
+
+        LoggerUtil.info("Local Maven root selected: " + mavenHome);
+        applyMavenEnvironment(mavenHome);
+    }
+
+    public void onUseLocalJdk() {
+        if (busy) {
+            LoggerUtil.info("Task is running. Please wait.");
+            return;
+        }
+
+        File selectedDir = chooseLocalDirectory("Select local JDK directory");
+        if (selectedDir == null) {
+            LoggerUtil.info("Local JDK selection cancelled.");
+            return;
+        }
+
+        String javaHome = resolveLocalJdkHomeForTest(selectedDir);
+        if (javaHome == null) {
+            LoggerUtil.info("Selected directory is not a valid JDK root. Missing bin\\java.exe.");
+            return;
+        }
+
+        LoggerUtil.info("Local JDK root selected: " + javaHome);
+        applyJdkEnvironment(javaHome);
+    }
+
     @FXML
     private void initialize() {
         ObservableList<String> jdkVersions = FXCollections.observableArrayList("8", "11", "17", "21");
@@ -273,6 +347,10 @@ public class EnvInstallerController {
             return;
         }
 
+        applyJdkEnvironment(javaHome);
+    }
+
+    private void applyJdkEnvironment(String javaHome) {
         setBusy(true);
 
         Task<EnvironmentSetupResult> task = new Task<>() {
@@ -300,9 +378,25 @@ public class EnvInstallerController {
         new Thread(task, "set-jdk-env-thread").start();
     }
 
+    String resolveLocalJdkHomeForTest(File selectedDir) {
+        return isValidLocalJdkRoot(selectedDir) ? selectedDir.getAbsolutePath() : null;
+    }
+
+    String resolveLocalMavenHomeForTest(File selectedDir) {
+        return isValidLocalMavenRoot(selectedDir) ? selectedDir.getAbsolutePath() : null;
+    }
+
+    String resolveLocalNodeHomeForTest(File selectedDir) {
+        return isValidLocalNodeRoot(selectedDir) ? selectedDir.getAbsolutePath() : null;
+    }
+
     private void setBusy(boolean busyState) {
         this.busy = busyState;
         refreshUiState();
+    }
+
+    void setBusyForTest(boolean busyState) {
+        setBusy(busyState);
     }
 
     private void refreshUiState() {
@@ -310,8 +404,11 @@ public class EnvInstallerController {
 
         chooseInstallDirButton.setDisable(busy);
         installJdkButton.setDisable(busy || !hasInstallDir);
+        useLocalJdkButton.setDisable(busy);
         installMavenButton.setDisable(busy || !hasInstallDir);
+        useLocalMavenButton.setDisable(busy);
         installNodeButton.setDisable(busy || !hasInstallDir);
+        useLocalNodeButton.setDisable(busy);
         showConfigButton.setDisable(busy);
         reloadSourcesButton.setDisable(busy);
         saveSourcesButton.setDisable(busy);
@@ -367,8 +464,90 @@ public class EnvInstallerController {
         return extractedRoot.getAbsolutePath();
     }
 
+    private File chooseLocalDirectory(String title) {
+        DirectoryChooser chooser = new DirectoryChooser();
+        chooser.setTitle(title);
+        return chooser.showDialog(null);
+    }
+
+    private void applyMavenEnvironment(String mavenHome) {
+        setBusy(true);
+
+        Task<EnvironmentSetupResult> task = new Task<>() {
+            @Override
+            protected EnvironmentSetupResult call() throws Exception {
+                return mavenEnvService.configureMavenEnvironment(mavenHome, mavenHome + "\\bin");
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            EnvironmentSetupResult result = task.getValue();
+            if (result != null && result.isCompleted()) {
+                LoggerUtil.info("Maven install completed.");
+            } else {
+                LoggerUtil.info("Maven files are installed, but environment setup is incomplete.");
+            }
+            setBusy(false);
+        });
+
+        task.setOnFailed(event -> {
+            LoggerUtil.info("Set Maven environment failed: " + safeError(task.getException()));
+            setBusy(false);
+        });
+
+        new Thread(task, "set-maven-env-thread").start();
+    }
+
+    private void applyNodeEnvironment(String nodeHome) {
+        setBusy(true);
+
+        Task<EnvironmentSetupResult> task = new Task<>() {
+            @Override
+            protected EnvironmentSetupResult call() throws Exception {
+                return nodeEnvService.configureNodeEnvironment(nodeHome, "%NODE_HOME%");
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            EnvironmentSetupResult result = task.getValue();
+            if (result != null && result.isCompleted()) {
+                LoggerUtil.info("Node install completed.");
+            } else {
+                LoggerUtil.info("Node files are installed, but environment setup is incomplete.");
+            }
+            setBusy(false);
+        });
+
+        task.setOnFailed(event -> {
+            LoggerUtil.info("Set Node environment failed: " + safeError(task.getException()));
+            setBusy(false);
+        });
+
+        new Thread(task, "set-node-env-thread").start();
+    }
+
     private boolean isValidUrl(String value) {
         return value != null && (value.startsWith("http://") || value.startsWith("https://"));
+    }
+
+    // Local import requires the user to point at the tool root so validation stays deterministic.
+    static boolean isValidLocalJdkRoot(File root) {
+        return root != null
+                && root.isDirectory()
+                && new File(root, "bin" + File.separator + "java.exe").isFile();
+    }
+
+    static boolean isValidLocalMavenRoot(File root) {
+        return root != null
+                && root.isDirectory()
+                && new File(root, "bin" + File.separator + "mvn.cmd").isFile()
+                && new File(root, "conf").isDirectory();
+    }
+
+    static boolean isValidLocalNodeRoot(File root) {
+        return root != null
+                && root.isDirectory()
+                && new File(root, "node.exe").isFile();
     }
 
     private String safeTrim(String value) {
