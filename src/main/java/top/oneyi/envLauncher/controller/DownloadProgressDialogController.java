@@ -18,6 +18,14 @@ public class DownloadProgressDialogController {
     private volatile boolean cancelRequested = false;
 
     public void onCancelDownload() {
+        requestCancel();
+    }
+
+    public void onDialogCloseRequest() {
+        requestCancel();
+    }
+
+    private void requestCancel() {
         cancelRequested = true;
         statusLabel.setText("Download canceled by user");
     }

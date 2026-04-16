@@ -541,6 +541,8 @@ public class EnvInstallerService {
         try {
             Scene scene = new Scene(loader.load(), 450, 180);
             dialogStage.setScene(scene);
+            // Closing the window should behave like clicking cancel so the main UI can leave the busy state.
+            dialogStage.setOnCloseRequest(event -> loader.<DownloadProgressDialogController>getController().onDialogCloseRequest());
             dialogStage.show();
         } catch (IOException e) {
             LoggerUtil.info("Create progress dialog failed: " + safeError(e));
