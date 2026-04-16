@@ -64,6 +64,13 @@ public class WindowsEnvCommandService {
         );
     }
 
+    public void broadcastEnvironmentChange() throws IOException {
+        CmdUtil.executeCommand(
+                new String[]{"rundll32.exe", "user32.dll,UpdatePerUserSystemParameters"},
+                WINDOWS_CHARSET
+        );
+    }
+
     public boolean isProcessElevated() throws IOException {
         String output = CmdUtil.executeCommand(
                 new String[]{

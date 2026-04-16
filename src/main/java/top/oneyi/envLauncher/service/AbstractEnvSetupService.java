@@ -44,6 +44,7 @@ public abstract class AbstractEnvSetupService extends AbstractPathEnvService {
                 applyMachineEnvironmentWithElevation(machineVariables, updatedPath);
         if (elevationResult.successful()) {
             syncUserEnvironment(machineVariables, updatedPath);
+            broadcastEnvironmentChangeIfPossible();
             String message = buildSuccessMessage(machineVariables, true);
             LoggerUtil.info(message);
             return EnvironmentSetupResult.completed("completed", true, message);
@@ -65,6 +66,7 @@ public abstract class AbstractEnvSetupService extends AbstractPathEnvService {
         // Keep machine and current-user registry values aligned so future shells resolve the same tool path.
         applyMachineEnvironment(machineVariables, updatedPath);
         syncUserEnvironment(machineVariables, updatedPath);
+        broadcastEnvironmentChangeIfPossible();
     }
 
     protected void syncUserEnvironment(Map<String, String> machineVariables, String updatedPath) throws Exception {
@@ -80,6 +82,16 @@ public abstract class AbstractEnvSetupService extends AbstractPathEnvService {
             return variableSummary + " and PATH were updated after administrator approval. Restart terminal or IDE to apply changes.";
         }
         return variableSummary + " and PATH were updated in system environment variables. Restart terminal or IDE to apply changes.";
+    }
+
+    private void broadcastEnvironmentChangeIfPossible() {
+        try {
+            windowsEnvCommandService.broadcastEnvironmentChange();
+            LoggerUtil.info("Windows environment refresh broadcast completed.");
+        } catch (Exception e) {
+            // Registry writes already succeeded, so keep the install successful but leave a trace for delayed refresh cases.
+            LoggerUtil.info("Windows environment refresh broadcast failed: " + e.getMessage());
+        }
     }
 
     private String formatVariableSummary(Map<String, String> machineVariables) {

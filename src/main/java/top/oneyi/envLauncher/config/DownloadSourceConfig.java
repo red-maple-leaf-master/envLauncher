@@ -62,16 +62,28 @@ public final class DownloadSourceConfig {
     }
 
     public static String buildJdkUrl(String version) {
-        String template = getJdkUrlTemplate();
-        if (template != null && template.contains("{version}")) {
-            return template.replace("{version}", version);
+        return resolveJdkUrl(version, getJdkBaseUrl(), getJdkUrlTemplate());
+    }
+
+    static String resolveJdkUrl(String version, String jdkBaseUrl, String jdkUrlTemplate) {
+        // The default Adoptium endpoint redirects to GitHub, which is less stable than the mirrored zip path here.
+        if (DEFAULT_JDK_URL_TEMPLATE.equals(jdkUrlTemplate)) {
+            return buildJdkMirrorUrl(version, jdkBaseUrl);
         }
 
+        if (jdkUrlTemplate != null && jdkUrlTemplate.contains("{version}")) {
+            return jdkUrlTemplate.replace("{version}", version);
+        }
+
+        return buildJdkMirrorUrl(version, jdkBaseUrl);
+    }
+
+    private static String buildJdkMirrorUrl(String version, String jdkBaseUrl) {
         String artifactPath = JdkVersionConfig.getArtifactPath(version);
         if (artifactPath == null || artifactPath.isBlank()) {
             throw new IllegalArgumentException("Unsupported JDK version: " + version);
         }
-        return getJdkBaseUrl() + artifactPath;
+        return normalizeBaseUrl(jdkBaseUrl) + artifactPath;
     }
 
     public static String buildMavenUrl(String version) {

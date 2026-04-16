@@ -44,6 +44,20 @@ public class JdkEnvServiceTest {
     }
 
     @Test
+    public void broadcastsEnvironmentRefreshAfterSuccessfulSetup() throws Exception {
+        FakeWindowsEnvCommandService commandService = new FakeWindowsEnvCommandService();
+        commandService.elevated = false;
+        commandService.elevationResult = WindowsEnvCommandService.ElevationResult.success();
+        JdkEnvService service = new JdkEnvService(commandService);
+
+        EnvironmentSetupResult result = service.configureJdkEnvironment("C:\\env\\jdk-17", "%JAVA_HOME%\\bin");
+
+        assertTrue(result.isCompleted());
+        assertTrue("successful environment setup should notify Windows about the updated environment",
+                commandService.environmentRefreshBroadcasted);
+    }
+
+    @Test
     public void reportsCancellationWhenElevationIsDeclined() throws Exception {
         FakeWindowsEnvCommandService commandService = new FakeWindowsEnvCommandService();
         commandService.elevated = false;
@@ -62,6 +76,7 @@ public class JdkEnvServiceTest {
         private boolean elevated;
         private boolean userVariableUpdated;
         private boolean userPathUpdated;
+        private boolean environmentRefreshBroadcasted;
         private String elevatedJavaHome;
         private final Map<String, String> elevatedMachineVariables = new LinkedHashMap<>();
         private ElevationResult elevationResult = ElevationResult.success();
@@ -90,6 +105,11 @@ public class JdkEnvServiceTest {
         @Override
         public void updateUserPath(String pathValue) {
             userPathUpdated = true;
+        }
+
+        @Override
+        public void broadcastEnvironmentChange() {
+            environmentRefreshBroadcasted = true;
         }
 
         @Override
