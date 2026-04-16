@@ -4,7 +4,7 @@
 
 **Goal:** 新增一个固定切换到 JDK 17 的 Windows 打包脚本，让用户可直接执行绿色版打包，不再受本机默认 JDK 8 干扰。
 
-**Architecture:** 通过一个独立的 `package-portable.bat` 包装现有 Maven profile 打包命令，在脚本中显式设置 `JAVA_HOME` 和 `PATH`。不改动现有 `run.bat`，保持入口职责清晰。
+**Architecture:** 通过一个独立的 `package-portable.bat` 包装现有 Maven profile 打包命令，在脚本中显式设置 `JAVA_HOME` 和 `PATH`，保持打包入口职责清晰。
 
 **Tech Stack:** Windows Batch, Maven, JDK 17, jpackage profile
 

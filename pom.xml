@@ -120,7 +120,7 @@
                                     <executable>powershell</executable>
                                     <arguments>
                                         <argument>-Command</argument>
-                                        <argument>&amp; '${java.home}/bin/jpackage.exe' --type app-image --dest '${project.build.directory}/portable' --name 'env-launcher' --icon '${project.basedir}/src/main/resources/icons/favicon.ico' --module-path '${project.build.directory}/jpackage-modules;${project.build.directory}/${project.build.finalName}.jar' --module 'top.oneyi.envLauncher/top.oneyi.envLauncher.MainApp' --app-version '1.0' --vendor 'top.oneyi' --verbose</argument>
+                                        <argument>&amp; '${java.home}/bin/jpackage.exe' --type app-image --dest '${project.build.directory}/portable' --name 'env-launcher' --module-path '${project.build.directory}/jpackage-modules;${project.build.directory}/${project.build.finalName}.jar' --module 'top.oneyi.envLauncher/top.oneyi.envLauncher.MainApp' --app-version '1.0' --vendor 'top.oneyi' --verbose</argument>
                                     </arguments>
                                 </configuration>
                             </execution>

@@ -51,6 +51,13 @@ You can also run the helper script on Windows:
 package-portable.bat
 ```
 
+Packaging environment used in this project:
+- JDK 17
+- Maven 3.3.9+
+- Local Maven repository: use the repository configured on the current machine
+
+The helper script does not switch JDK or Maven automatically. It directly runs the packaging command in the current environment.
+
 ## Download Source Config
 Two-level config is supported:
 1. `download-sources.properties` in project root (preferred)

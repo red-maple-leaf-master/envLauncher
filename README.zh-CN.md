@@ -51,6 +51,13 @@ mvn clean package -Pportable-app-image
 package-portable.bat
 ```
 
+当前项目使用的打包环境：
+- JDK 17
+- Maven 3.3.9+
+- 本地 Maven 仓库：使用当前电脑自己配置的仓库
+
+该脚本不会自动切换 JDK 或 Maven，只会在当前环境中直接执行打包命令。
+
 ## 下载源配置
 支持两层配置：
 1. 项目根目录 `download-sources.properties`（推荐）
