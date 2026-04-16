@@ -22,12 +22,18 @@ public class EnvInstallerLayoutTest {
     }
 
     @Test
-    public void envInstallerLayoutContainsLocalImportButtons() throws IOException {
+    public void envInstallerLayoutContainsLocalPathFieldsAndApplyButtons() throws IOException {
         String fxml = readEnvInstallerFxml();
 
-        assertTrue(fxml.contains("fx:id=\"useLocalJdkButton\""));
-        assertTrue(fxml.contains("fx:id=\"useLocalMavenButton\""));
-        assertTrue(fxml.contains("fx:id=\"useLocalNodeButton\""));
+        assertTrue(fxml.contains("fx:id=\"localJdkPathField\""));
+        assertTrue(fxml.contains("fx:id=\"localMavenPathField\""));
+        assertTrue(fxml.contains("fx:id=\"localNodePathField\""));
+        assertTrue(fxml.contains("fx:id=\"selectLocalJdkButton\""));
+        assertTrue(fxml.contains("fx:id=\"applyLocalJdkButton\""));
+        assertTrue(fxml.contains("fx:id=\"selectLocalMavenButton\""));
+        assertTrue(fxml.contains("fx:id=\"applyLocalMavenButton\""));
+        assertTrue(fxml.contains("fx:id=\"selectLocalNodeButton\""));
+        assertTrue(fxml.contains("fx:id=\"applyLocalNodeButton\""));
     }
 
     private String readEnvInstallerFxml() throws IOException {

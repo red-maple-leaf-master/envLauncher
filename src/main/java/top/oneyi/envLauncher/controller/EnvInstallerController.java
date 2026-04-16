@@ -46,15 +46,27 @@ public class EnvInstallerController {
     @FXML
     Button installJdkButton;
     @FXML
-    Button useLocalJdkButton;
+    Button selectLocalJdkButton;
+    @FXML
+    Button applyLocalJdkButton;
+    @FXML
+    TextField localJdkPathField;
     @FXML
     Button installMavenButton;
     @FXML
-    Button useLocalMavenButton;
+    Button selectLocalMavenButton;
+    @FXML
+    Button applyLocalMavenButton;
+    @FXML
+    TextField localMavenPathField;
     @FXML
     Button installNodeButton;
     @FXML
-    Button useLocalNodeButton;
+    Button selectLocalNodeButton;
+    @FXML
+    Button applyLocalNodeButton;
+    @FXML
+    TextField localNodePathField;
     @FXML
     Button showConfigButton;
     @FXML
@@ -229,7 +241,7 @@ public class EnvInstallerController {
         });
     }
 
-    public void onUseLocalNode() {
+    public void onSelectLocalNode() {
         if (busy) {
             LoggerUtil.info("Task is running. Please wait.");
             return;
@@ -247,11 +259,22 @@ public class EnvInstallerController {
             return;
         }
 
-        LoggerUtil.info("Local Node root selected: " + nodeHome);
-        applyNodeEnvironment(nodeHome);
+        setSelectedLocalNodePathForTest(nodeHome);
+        LoggerUtil.info("Local Node root selected and pending apply: " + nodeHome);
+        refreshUiState();
     }
 
-    public void onUseLocalMaven() {
+    public void onApplyLocalNode() {
+        if (!canApplyLocalNodeForTest()) {
+            LoggerUtil.info("Please select a local Node directory first.");
+            return;
+        }
+
+        LoggerUtil.info("Applying local Node environment...");
+        applyNodeEnvironment(safeTrim(localNodePathField.getText()));
+    }
+
+    public void onSelectLocalMaven() {
         if (busy) {
             LoggerUtil.info("Task is running. Please wait.");
             return;
@@ -269,11 +292,22 @@ public class EnvInstallerController {
             return;
         }
 
-        LoggerUtil.info("Local Maven root selected: " + mavenHome);
-        applyMavenEnvironment(mavenHome);
+        setSelectedLocalMavenPathForTest(mavenHome);
+        LoggerUtil.info("Local Maven root selected and pending apply: " + mavenHome);
+        refreshUiState();
     }
 
-    public void onUseLocalJdk() {
+    public void onApplyLocalMaven() {
+        if (!canApplyLocalMavenForTest()) {
+            LoggerUtil.info("Please select a local Maven directory first.");
+            return;
+        }
+
+        LoggerUtil.info("Applying local Maven environment...");
+        applyMavenEnvironment(safeTrim(localMavenPathField.getText()));
+    }
+
+    public void onSelectLocalJdk() {
         if (busy) {
             LoggerUtil.info("Task is running. Please wait.");
             return;
@@ -291,8 +325,19 @@ public class EnvInstallerController {
             return;
         }
 
-        LoggerUtil.info("Local JDK root selected: " + javaHome);
-        applyJdkEnvironment(javaHome);
+        setSelectedLocalJdkPathForTest(javaHome);
+        LoggerUtil.info("Local JDK root selected and pending apply: " + javaHome);
+        refreshUiState();
+    }
+
+    public void onApplyLocalJdk() {
+        if (!canApplyLocalJdkForTest()) {
+            LoggerUtil.info("Please select a local JDK directory first.");
+            return;
+        }
+
+        LoggerUtil.info("Applying local JDK environment...");
+        applyJdkEnvironment(safeTrim(localJdkPathField.getText()));
     }
 
     @FXML
@@ -382,12 +427,36 @@ public class EnvInstallerController {
         return isValidLocalJdkRoot(selectedDir) ? selectedDir.getAbsolutePath() : null;
     }
 
+    void setSelectedLocalJdkPathForTest(String path) {
+        localJdkPathField.setText(safeTrim(path));
+    }
+
+    boolean canApplyLocalJdkForTest() {
+        return !safeTrim(localJdkPathField.getText()).isBlank();
+    }
+
     String resolveLocalMavenHomeForTest(File selectedDir) {
         return isValidLocalMavenRoot(selectedDir) ? selectedDir.getAbsolutePath() : null;
     }
 
     String resolveLocalNodeHomeForTest(File selectedDir) {
         return isValidLocalNodeRoot(selectedDir) ? selectedDir.getAbsolutePath() : null;
+    }
+
+    void setSelectedLocalMavenPathForTest(String path) {
+        localMavenPathField.setText(safeTrim(path));
+    }
+
+    void setSelectedLocalNodePathForTest(String path) {
+        localNodePathField.setText(safeTrim(path));
+    }
+
+    boolean canApplyLocalMavenForTest() {
+        return !safeTrim(localMavenPathField.getText()).isBlank();
+    }
+
+    boolean canApplyLocalNodeForTest() {
+        return !safeTrim(localNodePathField.getText()).isBlank();
     }
 
     private void setBusy(boolean busyState) {
@@ -399,16 +468,24 @@ public class EnvInstallerController {
         setBusy(busyState);
     }
 
+    // Reuse the real UI gating rules in tests so local import state stays aligned with runtime behavior.
+    void refreshUiStateForTestHook() {
+        refreshUiState();
+    }
+
     private void refreshUiState() {
         boolean hasInstallDir = hasInstallDirectory();
 
         chooseInstallDirButton.setDisable(busy);
         installJdkButton.setDisable(busy || !hasInstallDir);
-        useLocalJdkButton.setDisable(busy);
+        selectLocalJdkButton.setDisable(busy);
+        applyLocalJdkButton.setDisable(busy || !canApplyLocalJdkForTest());
         installMavenButton.setDisable(busy || !hasInstallDir);
-        useLocalMavenButton.setDisable(busy);
+        selectLocalMavenButton.setDisable(busy);
+        applyLocalMavenButton.setDisable(busy || !canApplyLocalMavenForTest());
         installNodeButton.setDisable(busy || !hasInstallDir);
-        useLocalNodeButton.setDisable(busy);
+        selectLocalNodeButton.setDisable(busy);
+        applyLocalNodeButton.setDisable(busy || !canApplyLocalNodeForTest());
         showConfigButton.setDisable(busy);
         reloadSourcesButton.setDisable(busy);
         saveSourcesButton.setDisable(busy);
@@ -419,6 +496,9 @@ public class EnvInstallerController {
         jdkSourceField.setDisable(busy);
         mavenSourceField.setDisable(busy);
         nodeSourceField.setDisable(busy);
+        localJdkPathField.setDisable(busy);
+        localMavenPathField.setDisable(busy);
+        localNodePathField.setDisable(busy);
     }
 
     private void loadDownloadSourceFields() {

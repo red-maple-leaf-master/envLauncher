@@ -37,16 +37,28 @@
                 <FlowPane hgap="10" vgap="10" styleClass="action-flow" prefWrapLength="760">
                     <ComboBox fx:id="jdkVersionCombo" prefWidth="110" prefHeight="36" styleClass="env-combo"/>
                     <Button fx:id="installJdkButton" text="Install JDK" onAction="#onInstallJdk" prefHeight="36" styleClass="action-button primary"/>
-                    <Button fx:id="useLocalJdkButton" text="Use Local JDK" onAction="#onUseLocalJdk" prefHeight="36" styleClass="action-button secondary"/>
                     <ComboBox fx:id="mavenVersionCombo" prefWidth="170" prefHeight="36" styleClass="env-combo"/>
                     <Button fx:id="installMavenButton" text="Install Maven" onAction="#onInstallMaven" prefHeight="36" styleClass="action-button primary"/>
-                    <Button fx:id="useLocalMavenButton" text="Use Local Maven" onAction="#onUseLocalMaven" prefHeight="36" styleClass="action-button secondary"/>
                 </FlowPane>
                 <FlowPane hgap="10" vgap="10" styleClass="action-flow" prefWrapLength="760">
                     <ComboBox fx:id="nodeVersionCombo" prefWidth="120" prefHeight="36" styleClass="env-combo"/>
                     <Button fx:id="installNodeButton" text="Install Node" onAction="#onInstallNode" prefHeight="36" styleClass="action-button primary"/>
-                    <Button fx:id="useLocalNodeButton" text="Use Local Node" onAction="#onUseLocalNode" prefHeight="36" styleClass="action-button secondary"/>
                 </FlowPane>
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Button fx:id="selectLocalJdkButton" text="Select Local JDK" onAction="#onSelectLocalJdk" prefHeight="36" styleClass="action-button secondary"/>
+                    <TextField fx:id="localJdkPathField" editable="false" prefHeight="36" styleClass="path-field" promptText="No local JDK selected" HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="applyLocalJdkButton" text="Apply Local JDK" onAction="#onApplyLocalJdk" prefHeight="36" styleClass="action-button primary"/>
+                </HBox>
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Button fx:id="selectLocalMavenButton" text="Select Local Maven" onAction="#onSelectLocalMaven" prefHeight="36" styleClass="action-button secondary"/>
+                    <TextField fx:id="localMavenPathField" editable="false" prefHeight="36" styleClass="path-field" promptText="No local Maven selected" HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="applyLocalMavenButton" text="Apply Local Maven" onAction="#onApplyLocalMaven" prefHeight="36" styleClass="action-button primary"/>
+                </HBox>
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Button fx:id="selectLocalNodeButton" text="Select Local Node" onAction="#onSelectLocalNode" prefHeight="36" styleClass="action-button secondary"/>
+                    <TextField fx:id="localNodePathField" editable="false" prefHeight="36" styleClass="path-field" promptText="No local Node selected" HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="applyLocalNodeButton" text="Apply Local Node" onAction="#onApplyLocalNode" prefHeight="36" styleClass="action-button primary"/>
+                </HBox>
             </VBox>
 
             <VBox spacing="10" styleClass="card-panel">
