@@ -40,8 +40,17 @@ public class EnvInstallerService {
     private static final String DEFAULT_INSTALL_ROOT = PathUtils.getCurrentDrive() + "environment";
 
     private Stage dialogStage;
-    private final MavenEnvService mavenEnvService = new MavenEnvService();
-    private final NodeEnvService nodeEnvService = new NodeEnvService();
+    private final MavenEnvService mavenEnvService;
+    private final NodeEnvService nodeEnvService;
+
+    public EnvInstallerService() {
+        this(new MavenEnvService(), new NodeEnvService());
+    }
+
+    EnvInstallerService(MavenEnvService mavenEnvService, NodeEnvService nodeEnvService) {
+        this.mavenEnvService = mavenEnvService;
+        this.nodeEnvService = nodeEnvService;
+    }
 
     public void installNode(String version) {
         installNode(version, DEFAULT_INSTALL_ROOT, null);
@@ -82,8 +91,7 @@ public class EnvInstallerService {
 
                     String nodeHome = nodeRoot.getAbsolutePath();
                     LoggerUtil.info("Node home found: " + nodeHome);
-                    nodeEnvService.configureNodeEnvironment(nodeHome, "%NODE_HOME%");
-                    return true;
+                    return applyNodeEnvironment(nodeHome);
                 } catch (Exception e) {
                     LoggerUtil.info("Node setup failed: " + safeError(e));
                     return false;
@@ -134,8 +142,7 @@ public class EnvInstallerService {
 
                     createMavenRepository(mavenHome);
                     configureMavenSettings(mavenHome);
-                    mavenEnvService.configureMavenEnvironment(mavenHome, mavenHome + "\\bin");
-                    return true;
+                    return applyMavenEnvironment(mavenHome);
                 } catch (Exception e) {
                     LoggerUtil.info("Maven setup failed: " + safeError(e));
                     return false;
@@ -364,6 +371,24 @@ public class EnvInstallerService {
         StringWriter writer = new StringWriter();
         transformer.transform(new DOMSource(document), new StreamResult(writer));
         return writer.toString();
+    }
+
+    boolean applyMavenEnvironment(String mavenHome) throws Exception {
+        EnvironmentSetupResult result = mavenEnvService.configureMavenEnvironment(mavenHome, mavenHome + "\\bin");
+        if (!result.isCompleted()) {
+            LoggerUtil.info("Maven files are installed, but environment setup is incomplete.");
+            return false;
+        }
+        return true;
+    }
+
+    boolean applyNodeEnvironment(String nodeHome) throws Exception {
+        EnvironmentSetupResult result = nodeEnvService.configureNodeEnvironment(nodeHome, "%NODE_HOME%");
+        if (!result.isCompleted()) {
+            LoggerUtil.info("Node files are installed, but environment setup is incomplete.");
+            return false;
+        }
+        return true;
     }
 
     private boolean downloadFileWithProgress(String url,

@@ -1,6 +1,8 @@
 package top.oneyi.envLauncher.service;
 
+import javafx.application.Platform;
 import org.junit.Test;
+import org.junit.BeforeClass;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -11,6 +13,16 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 
 public class EnvInstallerServiceTest {
+
+    @BeforeClass
+    public static void initToolkit() {
+        try {
+            Platform.startup(() -> {
+            });
+        } catch (IllegalStateException ignored) {
+            // JavaFX toolkit may already be initialized by another test.
+        }
+    }
 
     @Test
     public void writesLocalRepositoryWhenSettingsOnlyContainCommentedTemplate() throws Exception {
@@ -62,6 +74,36 @@ public class EnvInstallerServiceTest {
                 updated.contains("<id>aliyunmaven</id>"));
     }
 
+    @Test
+    public void reportsMavenInstallIncompleteWhenEnvironmentSetupIsCancelled() throws Exception {
+        FakeMavenEnvService mavenEnvService = new FakeMavenEnvService();
+        mavenEnvService.result = EnvironmentSetupResult.incomplete(
+                "cancelled",
+                true,
+                "Administrator permission was cancelled."
+        );
+        EnvInstallerService service = new EnvInstallerService(mavenEnvService, new NodeEnvService());
+
+        boolean success = service.applyMavenEnvironment("C:\\env\\apache-maven-3.9.10");
+
+        assertFalse("installer should not report success when Maven environment setup is incomplete", success);
+    }
+
+    @Test
+    public void reportsNodeInstallIncompleteWhenEnvironmentSetupIsCancelled() throws Exception {
+        FakeNodeEnvService nodeEnvService = new FakeNodeEnvService();
+        nodeEnvService.result = EnvironmentSetupResult.incomplete(
+                "cancelled",
+                true,
+                "Administrator permission was cancelled."
+        );
+        EnvInstallerService service = new EnvInstallerService(new MavenEnvService(), nodeEnvService);
+
+        boolean success = service.applyNodeEnvironment("C:\\env\\node-v20");
+
+        assertFalse("installer should not report success when Node environment setup is incomplete", success);
+    }
+
     private String defaultSettingsTemplate() {
         return "<settings>" + System.lineSeparator()
                 + "  <!-- localRepository" + System.lineSeparator()
@@ -89,5 +131,23 @@ public class EnvInstallerServiceTest {
                 + "    </mirror>" + System.lineSeparator()
                 + "  </mirrors>" + System.lineSeparator()
                 + "</settings>" + System.lineSeparator();
+    }
+
+    private static final class FakeMavenEnvService extends MavenEnvService {
+        private EnvironmentSetupResult result = EnvironmentSetupResult.completed("completed", false, "done");
+
+        @Override
+        public EnvironmentSetupResult configureMavenEnvironment(String mavenHome, String mavenBinPath) {
+            return result;
+        }
+    }
+
+    private static final class FakeNodeEnvService extends NodeEnvService {
+        private EnvironmentSetupResult result = EnvironmentSetupResult.completed("completed", false, "done");
+
+        @Override
+        public EnvironmentSetupResult configureNodeEnvironment(String nodeHome, String nodePathEntry) {
+            return result;
+        }
     }
 }

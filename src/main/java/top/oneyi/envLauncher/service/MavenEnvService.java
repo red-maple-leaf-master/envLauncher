@@ -1,37 +1,40 @@
 package top.oneyi.envLauncher.service;
 
-import top.oneyi.envLauncher.utils.LoggerUtil;
-
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
-public class MavenEnvService extends AbstractPathEnvService {
+public class MavenEnvService extends AbstractEnvSetupService {
+
+    private static final String MAVEN_HOME = "MAVEN_HOME";
+
+    public MavenEnvService() {
+        super();
+    }
+
+    MavenEnvService(WindowsEnvCommandService windowsEnvCommandService) {
+        super(windowsEnvCommandService);
+    }
 
     public String getConfiguredMavenPath() throws IOException {
         return windowsEnvCommandService.findPathEntryContaining("maven");
     }
 
-    public void configureMavenEnvironment(String mavenHome, String mavenBinPath) throws Exception {
-        EnvScope variableScope = updateEnvironmentVariable("MAVEN_HOME", mavenHome);
-        EnvScope pathScope = updatePath(mavenBinPath, "maven");
-        LoggerUtil.info(buildScopeMessage("MAVEN_HOME", variableScope, pathScope));
+    public EnvironmentSetupResult configureMavenEnvironment(String mavenHome, String mavenBinPath) throws Exception {
+        return configureEnvironment("Maven", Map.of(MAVEN_HOME, mavenHome), List.of(mavenBinPath), "maven");
     }
 
-    private EnvScope updateEnvironmentVariable(String variableName, String variableValue) throws Exception {
-        try {
-            windowsEnvCommandService.setMachineEnvironmentVariable(variableName, variableValue);
-            windowsEnvCommandService.setUserRegistryEnvironmentVariable(variableName, variableValue);
-            return EnvScope.MACHINE;
-        } catch (IOException e) {
-            LoggerUtil.info("System " + variableName + " update failed, fallback to current user scope: " + e.getMessage());
-            windowsEnvCommandService.setUserRegistryEnvironmentVariable(variableName, variableValue);
-            return EnvScope.USER;
-        }
+    @Override
+    protected void applyMachineEnvironment(Map<String, String> machineVariables, String updatedPath) throws Exception {
+        windowsEnvCommandService.setMachineEnvironmentVariable(MAVEN_HOME, machineVariables.get(MAVEN_HOME));
+        windowsEnvCommandService.updateMachinePath(updatedPath);
     }
 
-    private String buildScopeMessage(String variableName, EnvScope variableScope, EnvScope pathScope) {
-        if (variableScope == EnvScope.MACHINE && pathScope == EnvScope.MACHINE) {
-            return "[" + variableName + "] and PATH were updated in system environment variables. Restart terminal or IDE to apply changes.";
-        }
-        return "[" + variableName + "] and PATH were updated in current user environment variables. Restart terminal or IDE to apply changes.";
+    @Override
+    protected WindowsEnvCommandService.ElevationResult applyMachineEnvironmentWithElevation(
+            Map<String, String> machineVariables,
+            String updatedPath
+    ) throws Exception {
+        return windowsEnvCommandService.applyMachineEnvironmentWithElevation(machineVariables, updatedPath);
     }
 }

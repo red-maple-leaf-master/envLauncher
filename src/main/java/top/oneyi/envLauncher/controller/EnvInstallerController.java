@@ -10,6 +10,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
 import top.oneyi.envLauncher.config.DownloadSourceConfig;
+import top.oneyi.envLauncher.service.EnvironmentSetupResult;
 import top.oneyi.envLauncher.service.EnvInstallerService;
 import top.oneyi.envLauncher.service.JdkEnvService;
 import top.oneyi.envLauncher.service.MavenEnvService;
@@ -274,16 +275,20 @@ public class EnvInstallerController {
 
         setBusy(true);
 
-        Task<Void> task = new Task<>() {
+        Task<EnvironmentSetupResult> task = new Task<>() {
             @Override
-            protected Void call() throws Exception {
-                jdkEnvService.configureJdkEnvironment(javaHome, "%JAVA_HOME%\\bin");
-                return null;
+            protected EnvironmentSetupResult call() throws Exception {
+                return jdkEnvService.configureJdkEnvironment(javaHome, "%JAVA_HOME%\\bin");
             }
         };
 
         task.setOnSucceeded(event -> {
-            LoggerUtil.info("JDK install completed.");
+            EnvironmentSetupResult result = task.getValue();
+            if (result != null && result.isCompleted()) {
+                LoggerUtil.info("JDK install completed.");
+            } else {
+                LoggerUtil.info("JDK files are installed, but environment setup is incomplete.");
+            }
             setBusy(false);
         });
 

@@ -4,10 +4,21 @@ import top.oneyi.envLauncher.utils.LoggerUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
-public class NodeEnvService extends AbstractPathEnvService {
+public class NodeEnvService extends AbstractEnvSetupService {
+    private static final String NODE_HOME = "NODE_HOME";
 
-    public void configureNodeEnvironment(String nodeHome, String nodePathEntry) throws Exception {
+    public NodeEnvService() {
+        super();
+    }
+
+    NodeEnvService(WindowsEnvCommandService windowsEnvCommandService) {
+        super(windowsEnvCommandService);
+    }
+
+    public EnvironmentSetupResult configureNodeEnvironment(String nodeHome, String nodePathEntry) throws Exception {
         String globalInstallPath = nodeHome + "\\node_global";
         String cachePath = nodeHome + "\\node_cache";
         if (!new File(globalInstallPath).exists()) {
@@ -17,15 +28,18 @@ public class NodeEnvService extends AbstractPathEnvService {
             new File(cachePath).mkdirs();
         }
 
-        EnvScope variableScope = updateEnvironmentVariable("NODE_HOME", nodeHome);
+        EnvironmentSetupResult envResult = configureEnvironment(
+                "Node",
+                Map.of(NODE_HOME, nodeHome),
+                List.of(nodePathEntry, globalInstallPath, cachePath)
+        );
+        if (!envResult.isCompleted()) {
+            LoggerUtil.info("Node environment setup incomplete. Skip npm configuration.");
+            return envResult;
+        }
 
-        // Add the executable path first so npm/cnpm commands resolve against the installed Node version.
-        EnvScope nodePathScope = updatePath(nodePathEntry);
-        EnvScope globalInstallPathScope = updatePath(globalInstallPath);
-        EnvScope cachePathScope = updatePath(cachePath);
         configureNpmPaths(cachePath, globalInstallPath);
-
-        LoggerUtil.info(buildScopeMessage(variableScope, nodePathScope, globalInstallPathScope, cachePathScope));
+        return envResult;
     }
 
     public void configureNpmPaths(String cachePath, String globalInstallPath) throws IOException {
@@ -53,28 +67,17 @@ public class NodeEnvService extends AbstractPathEnvService {
         }
     }
 
-    private EnvScope updateEnvironmentVariable(String variableName, String variableValue) throws Exception {
-        try {
-            windowsEnvCommandService.setMachineEnvironmentVariable(variableName, variableValue);
-            windowsEnvCommandService.setUserRegistryEnvironmentVariable(variableName, variableValue);
-            return EnvScope.MACHINE;
-        } catch (IOException e) {
-            LoggerUtil.info("System " + variableName + " update failed, fallback to current user scope: " + e.getMessage());
-            windowsEnvCommandService.setUserRegistryEnvironmentVariable(variableName, variableValue);
-            return EnvScope.USER;
-        }
+    @Override
+    protected void applyMachineEnvironment(Map<String, String> machineVariables, String updatedPath) throws Exception {
+        windowsEnvCommandService.setMachineEnvironmentVariable(NODE_HOME, machineVariables.get(NODE_HOME));
+        windowsEnvCommandService.updateMachinePath(updatedPath);
     }
 
-    private String buildScopeMessage(EnvScope variableScope,
-                                     EnvScope nodePathScope,
-                                     EnvScope globalInstallPathScope,
-                                     EnvScope cachePathScope) {
-        if (variableScope == EnvScope.MACHINE
-                && nodePathScope == EnvScope.MACHINE
-                && globalInstallPathScope == EnvScope.MACHINE
-                && cachePathScope == EnvScope.MACHINE) {
-            return "NODE_HOME and PATH were updated in system environment variables. Restart terminal or IDE to apply changes.";
-        }
-        return "NODE_HOME and PATH were updated in current user environment variables. Restart terminal or IDE to apply changes.";
+    @Override
+    protected WindowsEnvCommandService.ElevationResult applyMachineEnvironmentWithElevation(
+            Map<String, String> machineVariables,
+            String updatedPath
+    ) throws Exception {
+        return windowsEnvCommandService.applyMachineEnvironmentWithElevation(machineVariables, updatedPath);
     }
 }

@@ -16,23 +16,36 @@ public abstract class AbstractPathEnvService {
         USER
     }
 
-    protected final WindowsEnvCommandService windowsEnvCommandService = new WindowsEnvCommandService();
+    protected final WindowsEnvCommandService windowsEnvCommandService;
     private String cachedPath;
 
-    protected EnvScope updatePath(String pathEntry, String... excludeKeywords) throws IOException {
+    protected AbstractPathEnvService() {
+        this(new WindowsEnvCommandService());
+    }
+
+    protected AbstractPathEnvService(WindowsEnvCommandService windowsEnvCommandService) {
+        this.windowsEnvCommandService = windowsEnvCommandService;
+    }
+
+    protected String buildUpdatedPathValue(String pathEntry, String... excludeKeywords) {
         // Keep using the current process PATH as the merge base to preserve existing behavior.
         if (cachedPath == null) {
             cachedPath = System.getenv("PATH");
         }
 
         cachedPath = PathUtils.filterAndInsertPath(pathEntry, cachedPath, excludeKeywords);
+        return cachedPath;
+    }
+
+    protected EnvScope updatePath(String pathEntry, String... excludeKeywords) throws IOException {
+        String updatedPath = buildUpdatedPathValue(pathEntry, excludeKeywords);
         try {
-            windowsEnvCommandService.updateMachinePath(cachedPath);
+            windowsEnvCommandService.updateMachinePath(updatedPath);
             return EnvScope.MACHINE;
         } catch (IOException e) {
             // Fall back to the current user when the app is not running with machine-level registry privileges.
             LoggerUtil.info("System PATH update failed, fallback to current user PATH: " + e.getMessage());
-            windowsEnvCommandService.updateUserPath(cachedPath);
+            windowsEnvCommandService.updateUserPath(updatedPath);
             return EnvScope.USER;
         }
     }
